@@ -1,0 +1,116 @@
+/*
+ * Study Desk's design tokens (nihongo-app/src/styles/tokens.css), copied. Streak's own accent and habit colours are at the end.
+ *
+ * Design tokens – "Leather": flat, warm brown surfaces, cream text, one monospace typeface.
+ * Light = mid-tone leather (the reference), dark = night leather. Every subject has its own
+ * accent colour (data-course on <html>); Home and shared screens use cream.
+ *
+ * Names are kept from the first version (paper / surface / ink …) so components stay readable:
+ *   --paper      page background          --surface    cards, panels, toolbars
+ *   --ink        main text                --ink-2/3    secondary / faint text
+ *   --line       hairlines                --accent     subject colour (buttons, active states)
+ */
+:root {
+  --paper: #a86948;
+  --paper-2: #9d6041;
+  --surface: #8f5636;
+  --surface-2: #844f31;
+  --ink: #ffe4bc;
+  --ink-2: #f5d2a8;
+  --ink-3: #dcb08a;
+  --line: rgba(255, 228, 188, 0.14);
+  --line-2: rgba(255, 228, 188, 0.26);
+  --track: rgba(43, 22, 12, 0.28);
+  --accent: #ffe4bc;
+  --accent-hover: #fff0d9;
+  --accent-tint: rgba(255, 228, 188, 0.16);
+  --accent-ink: #3a1f10;
+  --seal: #ffe4bc;
+  --good: #d2f5b0;
+  --good-tint: rgba(210, 245, 176, 0.16);
+  --bad: #ffb8a8;
+  --bad-tint: rgba(255, 184, 168, 0.18);
+  --warn: #ffe08a;
+  --warn-tint: rgba(255, 224, 138, 0.16);
+  --hint-paper: #fff6e8;
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-lg: 0 18px 48px rgba(43, 22, 12, 0.35);
+
+  /* type scale */
+  --text-xs: 0.72rem;
+  --text-sm: 0.84rem;
+  --text-md: 0.95rem;
+  --text-lg: 1.2rem;
+  --text-xl: 1.6rem;
+  --text-2xl: clamp(1.7rem, 1.3rem + 1.4vw, 2.3rem);
+
+  /* spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --radius: 14px;
+  --radius-md: 10px;
+  --radius-sm: 8px;
+  --font-sans: 'Roboto Mono Variable', 'Noto Sans JP Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* Japanese display text (kana / kanji prompts) */
+  --font-serif: 'Roboto Mono Variable', 'Noto Sans JP Variable', 'Hiragino Sans', sans-serif;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --nav-w: 228px;
+  --bottom-nav-h: 62px;
+  color-scheme: dark;
+}
+
+/* Night leather */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #2a1a12;
+    --paper-2: #24160f;
+    --surface: #382319;
+    --surface-2: #432a1e;
+    --ink: #ffe4bc;
+    --ink-2: #e2bf98;
+    --ink-3: #b28d6a;
+    --line: rgba(255, 228, 188, 0.1);
+    --line-2: rgba(255, 228, 188, 0.2);
+    --track: rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.5);
+  }
+}
+
+:root[data-theme='dark'] {
+  --paper: #2a1a12;
+  --paper-2: #24160f;
+  --surface: #382319;
+  --surface-2: #432a1e;
+  --ink: #ffe4bc;
+  --ink-2: #e2bf98;
+  --ink-3: #b28d6a;
+  --line: rgba(255, 228, 188, 0.1);
+  --line-2: rgba(255, 228, 188, 0.2);
+  --track: rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* Subject colours – light pastels that read on both leather tones */
+:root[data-course='japanese'] { --accent: #bfe0ff; --accent-hover: #d6ebff; --accent-tint: rgba(191, 224, 255, 0.16); --accent-ink: #10263d; }
+:root[data-course='cfa'] { --accent: #bdecc6; --accent-hover: #d3f4d9; --accent-tint: rgba(189, 236, 198, 0.16); --accent-ink: #123320; }
+:root[data-course='bwl'] { --accent: #ffe08a; --accent-hover: #ffeab0; --accent-tint: rgba(255, 224, 138, 0.16); --accent-ink: #3a2a05; }
+:root[data-course='recht'] { --accent: #ffc6bd; --accent-hover: #ffd9d3; --accent-tint: rgba(255, 198, 189, 0.16); --accent-ink: #401812; }
+:root[data-course='interview'] { --accent: #d9c8ff; --accent-hover: #e6dbff; --accent-tint: rgba(217, 200, 255, 0.18); --accent-ink: #2a1a4a; }
+:root[data-course='focus'] { --accent: #ffcf99; --accent-hover: #ffdcb5; --accent-tint: rgba(255, 207, 153, 0.18); --accent-ink: #3d2108; }
+
+/* The same colours by name, for subject tiles on Home */
+:root {
+  --subject-japanese: #bfe0ff;
+  --subject-cfa: #bdecc6;
+  --subject-bwl: #ffe08a;
+  --subject-recht: #ffc6bd;
+  --subject-focus: #ffcf99;
+  --subject-interview: #d9c8ff;
+}

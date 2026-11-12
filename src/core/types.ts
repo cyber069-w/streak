@@ -40,6 +40,8 @@ export interface Habit {
   id: string;
   name: string;
   icon: string;
+  /** Tile colour: red, orange, yellow, green, teal, blue, indigo, purple, pink. */
+  color?: string;
   order: number;
   /** Shown first in the morning or in the evening on Today (no enforced time window). */
   timeOfDay?: 'morning' | 'evening';

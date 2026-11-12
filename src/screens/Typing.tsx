@@ -6,6 +6,7 @@ import { factsOf, getState, useApp } from '../core/store';
 import { refreshTyping, useTypingStatus } from '../core/typingSync';
 import { BarChart, ChartTable, LineChart } from '../components/Charts';
 import { Icon } from '../components/Icon';
+import { EmptyState, PageHead, SectionHead } from '../components/ui';
 import { navigate } from '../lib/router';
 import { TypingEntry } from './Today';
 
@@ -25,75 +26,76 @@ export function Typing() {
   const pct = now === null ? 0 : Math.max(0, Math.min(100, ((now - start) / (goal - start)) * 100));
   const typingHabit = state.habits.find((h) => !h.archivedDay && h.versions.some((v) => v.sources.some((x) => x.kind === 'monkeytype')));
 
+  const status = !state.settings.apeKey
+    ? 'Monkeytype is not connected yet.'
+    : `${st.error ? `${st.error} ` : st.at ? `Checked ${time(st.at)}${st.added ? ` · ${st.added} new` : ''} · ` : ''}${st.left} of 10 checks left today on this device`;
+
   return (
-    <div className="page stack">
-      <header className="page-head">
-        <h1>Typing</h1>
-        {state.settings.apeKey && (
-          <button className="btn small" onClick={() => void refreshTyping(true)} disabled={st.busy || st.left <= 0}>
+    <div className="page">
+      <PageHead
+        eyebrow="Monkeytype"
+        title="Typing"
+        sub={status}
+        actions={state.settings.apeKey ? (
+          <button className="btn btn-sm" onClick={() => void refreshTyping(true)} disabled={st.busy || st.left <= 0}>
             <Icon name="refresh" size={16} /> {st.busy ? 'Loading…' : 'Refresh'}
           </button>
+        ) : (
+          <button className="btn btn-sm btn-primary" onClick={() => navigate('/settings')}><Icon name="key" size={16} /> Add ApeKey</button>
         )}
-      </header>
+      />
 
-      {!state.settings.apeKey && (
-        <section className="glass stack">
-          <p>Connect Monkeytype to see your results here and tick Typing automatically.</p>
-          <div><button className="btn primary" onClick={() => navigate('/settings')}>Add ApeKey in Settings</button></div>
-        </section>
-      )}
-      {state.settings.apeKey && (
-        <p className="muted small" style={{ marginTop: -8 }}>
-          {st.error ? <span style={{ color: 'var(--bad)' }}>{st.error} </span> : st.at ? `Checked ${time(st.at)}${st.added ? ` · ${st.added} new` : ''} · ` : ''}
-          {st.left} of 10 checks left today on this device
-        </p>
-      )}
+      <div className="stat-tiles">
+        <div className="card tile"><div className="tile-icon"><Icon name="keyboard" size={18} /></div><div className="tile-value num">{now ?? '–'}</div><div className="tile-label">WPM now (last 10 tests)</div></div>
+        <div className="card tile"><div className="tile-icon"><Icon name="check" size={18} /></div><div className="tile-value num">{s.recentAcc ?? '–'}{s.recentAcc !== null ? '%' : ''}</div><div className="tile-label">accuracy</div></div>
+        <div className="card tile"><div className="tile-icon"><Icon name="flame" size={18} /></div><div className="tile-value num">{s.best7 ?? '–'}</div><div className="tile-label">best WPM, 7 days</div></div>
+        <div className="card tile"><div className="tile-icon"><Icon name="trophy" size={18} /></div><div className="tile-value num">{s.bestEver ?? '–'}</div><div className="tile-label">best ever</div></div>
+      </div>
 
-      <section className="glass">
-        <div className="tiles">
-          <div><b className="num">{now ?? '–'}</b><span>WPM now <i>(last 10)</i></span></div>
-          <div><b className="num">{s.recentAcc ?? '–'}{s.recentAcc !== null ? '%' : ''}</b><span>accuracy</span></div>
-          <div><b className="num">{s.best7 ?? '–'}</b><span>best, 7 days</span></div>
-          <div><b className="num">{s.bestEver ?? '–'}</b><span>best ever</span></div>
+      <section className="section">
+        <SectionHead title={`Goal: ${goal} WPM`} meta={now === null ? 'no tests yet' : now >= goal ? 'reached!' : `${Math.round((goal - now) * 10) / 10} WPM to go`} />
+        <div className="card card-pad">
+          <div className="goal-row" style={{ marginTop: 0 }}>
+            <span className="faint num">{start}</span>
+            <div className="bar" aria-label={`Progress from ${start} to ${goal} WPM`}><i style={{ width: `${pct}%` }} /></div>
+            <b className="num">{goal}</b>
+          </div>
         </div>
-        <div className="row small" style={{ marginTop: 14 }}>
-          <span className="muted num">{start}</span>
-          <div className="bar grow" aria-label={`Progress from ${start} to ${goal} WPM`}><i style={{ width: `${pct}%` }} /></div>
-          <span className="num" style={{ fontWeight: 600 }}>{goal} WPM</span>
-        </div>
-        <p className="muted small" style={{ marginTop: 4 }}>{now === null ? 'No tests yet.' : now >= goal ? 'Goal reached!' : `${Math.round((goal - now) * 10) / 10} WPM to go`}</p>
       </section>
 
-      <section className="glass">
-        <div className="glass-head"><h2>Best WPM per week</h2></div>
-        <LineChart
-          label={`Best WPM per week, last 12 weeks, goal ${goal}`} unit="WPM" goal={goal}
-          points={s.weekly.map((w) => ({ label: `Week of ${short(w.week)}`, short: short(w.week), value: w.best }))}
-        />
-        <ChartTable head={['Week of', 'Best WPM']} rows={s.weekly.map((w) => [short(w.week), w.best === null ? '–' : String(w.best)])} />
-      </section>
-
-      <section className="glass">
-        <div className="glass-head"><h2>Minutes typed per day</h2></div>
-        <BarChart label="Minutes typed per day, last 14 days" unit="min" bars={s.daily.map((d) => ({ label: short(d.day), short: short(d.day), value: d.minutes, note: `${d.tests} tests` }))} />
-        <ChartTable head={['Day', 'Minutes · tests']} rows={s.daily.map((d) => [short(d.day), `${d.minutes} · ${d.tests}`])} />
-      </section>
-
-      <section className="glass">
-        <div className="glass-head">
-          <h2>Latest tests</h2>
-          {typingHabit && <button className="btn small" onClick={() => setEntry(true)}><Icon name="pen" size={16} /> Enter by hand</button>}
+      <section className="section">
+        <SectionHead title="Best WPM per week" meta="last 12 weeks" />
+        <div className="card card-pad">
+          <LineChart
+            label={`Best WPM per week, last 12 weeks, goal ${goal}`} unit="WPM" goal={goal}
+            points={s.weekly.map((w) => ({ label: `Week of ${short(w.week)}`, short: short(w.week), value: w.best }))}
+          />
+          <ChartTable head={['Week of', 'Best WPM']} rows={s.weekly.map((w) => [short(w.week), w.best === null ? '–' : String(w.best)])} />
         </div>
-        {s.points.length ? (
-          <ul className="history">
-            {[...s.points].reverse().slice(0, 10).map((p) => (
-              <li key={`${p.ts}${p.manual ? 'm' : ''}`}>
-                <span className="grow">{p.mode || 'test'}<span className="muted small" style={{ display: 'block' }}>{time(p.ts)}</span></span>
-                <span className="num"><b>{p.wpm}</b> WPM · {p.acc}%</span>
-              </li>
-            ))}
-          </ul>
-        ) : <p className="muted small">Nothing yet.</p>}
+      </section>
+
+      <section className="section">
+        <SectionHead title="Minutes typed per day" meta="last 14 days" />
+        <div className="card card-pad">
+          <BarChart label="Minutes typed per day, last 14 days" unit="min" bars={s.daily.map((d) => ({ label: short(d.day), short: short(d.day), value: d.minutes, note: `${d.tests} tests` }))} />
+          <ChartTable head={['Day', 'Minutes · tests']} rows={s.daily.map((d) => [short(d.day), `${d.minutes} · ${d.tests}`])} />
+        </div>
+      </section>
+
+      <section className="section">
+        <SectionHead title="Latest tests" action={typingHabit && <button className="btn btn-sm" onClick={() => setEntry(true)}><Icon name="pen" size={16} /> Enter by hand</button>} />
+        <div className="card card-pad">
+          {s.points.length ? (
+            <ul className="history">
+              {[...s.points].reverse().slice(0, 10).map((p) => (
+                <li key={`${p.ts}${p.manual ? 'm' : ''}`}>
+                  <span className="grow">{p.mode || 'test'}<small>{time(p.ts)}</small></span>
+                  <span className="num"><b>{p.wpm}</b> WPM · {p.acc}%</span>
+                </li>
+              ))}
+            </ul>
+          ) : <EmptyState icon="keyboard" title="No tests yet" hint="Type a few tests on Monkeytype – they show up here after the next check." />}
+        </div>
       </section>
       {entry && typingHabit && <TypingEntry habitId={typingHabit.id} day={dayOf(Date.now(), tz)} onClose={() => setEntry(false)} />}
     </div>

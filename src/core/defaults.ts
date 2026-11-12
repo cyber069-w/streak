@@ -2,6 +2,17 @@
 import { dayOf, type Day } from './day';
 import type { Habit, HabitVersion, Reward, Rules } from './types';
 
+export const HABIT_COLORS = ['red', 'orange', 'yellow', 'green', 'teal', 'blue', 'indigo', 'purple', 'pink'];
+const DEFAULT_COLORS: Record<string, string> = { meditation: 'purple', typing: 'blue', japanese: 'red', cfa: 'green', vocab: 'orange', gym: 'indigo', journal: 'teal' };
+/** A habit's tile colour (older habits without one get a stable default). */
+export function habitColor(h: { id: string; color?: string }): string {
+  if (h.color) return h.color;
+  if (DEFAULT_COLORS[h.id]) return DEFAULT_COLORS[h.id];
+  let n = 0;
+  for (const c of h.id) n = (n * 31 + c.charCodeAt(0)) % 997;
+  return HABIT_COLORS[n % HABIT_COLORS.length];
+}
+
 /** Study Desk's Japanese module ids (its `days[].modules` keys). */
 export const JAPANESE_MODULES = ['hiragana', 'katakana', 'vocab', 'kanji', 'grammar', 'numbers', 'listening', 'speaking'];
 

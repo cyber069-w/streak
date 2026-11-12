@@ -4,6 +4,7 @@ import { addDays, weekStart, type Day } from '../core/day';
 import { useApp, useReport } from '../core/store';
 import { weekSummary, type HabitWeek } from '../core/week';
 import { Icon } from '../components/Icon';
+import { EmptyState, HabitIcon, PageHead, SectionHead } from '../components/ui';
 
 const short = (day: Day) => new Date(`${day}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 const HEAD = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -27,53 +28,61 @@ export function Week() {
   const slipped = w.habits.filter((h) => h.verdict === 'slipped');
   const first = report.habits.reduce((min, r) => (r.habit.createdDay < min ? r.habit.createdDay : min), report.today);
 
+  const verdict = (list: typeof held, empty: string, detail: (h: (typeof held)[number]) => string) =>
+    list.length ? (
+      <ul className="history">
+        {list.map((h) => <li key={h.id}><HabitIcon habit={h} className="sm" size={16} /><span className="grow">{h.name}</span><span className="faint small">{detail(h)}</span></li>)}
+      </ul>
+    ) : <p className="faint small">{empty}</p>;
+
   return (
-    <div className="page stack">
-      <header className="page-head">
-        <h1>Week</h1>
-        <button className="icon-btn" disabled={week <= weekStart(first)} onClick={() => setWeek(addDays(week, -7))} aria-label="Previous week"><Icon name="left" /></button>
-        <span className="small num" style={{ minWidth: 112, textAlign: 'center' }}>{short(week)} – {short(addDays(week, 6))}</span>
-        <button className="icon-btn" disabled={week >= current} onClick={() => setWeek(addDays(week, 7))} aria-label="Next week"><Icon name="right" /></button>
-      </header>
+    <div className="page">
+      <PageHead
+        eyebrow={`${short(week)} – ${short(addDays(week, 6))}`}
+        title={week === current ? 'This week' : week === addDays(current, -7) ? 'Last week' : 'Week'}
+        sub={rate(prev) !== null && rate(w) !== null ? `${rate(w)}% done – last week ${rate(prev)}%.` : rate(w) !== null ? `${rate(w)}% done.` : undefined}
+        actions={<>
+          <button className="icon-btn" disabled={week <= weekStart(first)} onClick={() => setWeek(addDays(week, -7))} aria-label="Previous week"><Icon name="left" /></button>
+          <button className="icon-btn" disabled={week >= current} onClick={() => setWeek(addDays(week, 7))} aria-label="Next week"><Icon name="right" /></button>
+        </>}
+      />
 
-      <section className="glass">
-        <div className="tiles">
-          <div><b className="num">{w.done} / {w.due}</b><span>done{rate(w) !== null ? ` · ${rate(w)}%` : ''}{rate(prev) !== null ? ` (last week ${rate(prev)}%)` : ''}</span></div>
-          <div><b style={{ fontSize: w.perfect === 'possible' ? '1.15rem' : undefined }}>{w.perfect === 'yes' ? 'Yes' : w.perfect === 'possible' ? 'Still possible' : 'No'}</b><span>perfect week</span></div>
-          <div><b className="num">+{w.earned}</b><span>Koban earned</span></div>
-          <div><b className="num">−{w.spent}</b><span>Koban spent</span></div>
-        </div>
-      </section>
+      <div className="stat-tiles">
+        <div className="card tile"><div className="tile-value num">{w.done}/{w.due}</div><div className="tile-label">habits done</div></div>
+        <div className="card tile"><div className="tile-value">{w.perfect === 'yes' ? 'Yes' : w.perfect === 'possible' ? 'Possible' : 'No'}</div><div className="tile-label">perfect week</div></div>
+        <div className="card tile"><div className="tile-value num">+{w.earned}</div><div className="tile-label">Koban earned</div></div>
+        <div className="card tile"><div className="tile-value num">−{w.spent}</div><div className="tile-label">Koban spent</div></div>
+      </div>
 
-      <section className="glass">
-        <div className="wk-grid" role="table" aria-label="Habits this week">
-          <div className="wk-row wk-head" role="row">
-            <span role="columnheader" />
-            {HEAD.map((d, i) => <span key={i} role="columnheader" className={addDays(week, i) === report.today ? 'today' : ''}>{d}</span>)}
-            <span role="columnheader" />
-          </div>
-          {w.habits.map((h) => (
-            <div key={h.id} className="wk-row" role="row">
-              <span role="rowheader" className="wk-name"><Icon name={h.icon} size={16} /><span>{h.name}</span></span>
-              {h.days.map((d) => <span key={d.day} role="cell"><Cell status={d.status} /></span>)}
-              <span role="cell" className="num small muted">{h.unit === 'weeks' ? `${h.done}/${h.due}` : ''}</span>
+      <section className="section">
+        <SectionHead title="Day by day" />
+        <div className="card card-pad">
+          <div className="wk-grid" role="table" aria-label="Habits this week">
+            <div className="wk-row wk-head" role="row">
+              <span role="columnheader" />
+              {HEAD.map((d, i) => <span key={i} role="columnheader" className={addDays(week, i) === report.today ? 'today' : ''}>{d}</span>)}
+              <span role="columnheader" />
             </div>
-          ))}
+            {w.habits.map((h) => (
+              <div key={h.id} className="wk-row" role="row">
+                <span role="rowheader" className="wk-name"><HabitIcon habit={h} size={14} /><span>{h.name}</span></span>
+                {h.days.map((d) => <span key={d.day} role="cell"><Cell status={d.status} /></span>)}
+                <span role="cell" className="num tiny faint">{h.unit === 'weeks' ? `${h.done}/${h.due}` : ''}</span>
+              </div>
+            ))}
+          </div>
+          {!w.habits.length && <EmptyState icon="week" title="Nothing tracked this week" />}
         </div>
       </section>
 
-      <section className="glass stack">
+      <section className="section verdicts">
         <div>
-          <h2 style={{ marginBottom: 6 }}>Held</h2>
-          <p className="small">{held.length ? held.map((h) => h.name).join(', ') : week === current ? 'Nothing finished yet – the week is still running.' : '–'}</p>
+          <SectionHead title="Held" />
+          <div className="card card-pad">{verdict(held, week === current ? 'Nothing finished yet – the week is still running.' : 'Nothing held this week.', (h) => (h.unit === 'weeks' ? `${h.done} of ${h.due}` : `${h.done} days`))}</div>
         </div>
         <div>
-          <h2 style={{ marginBottom: 6 }}>Slipped</h2>
-          <p className="small">
-            {slipped.length
-              ? slipped.map((h) => `${h.name} (${h.unit === 'weeks' ? `${h.done} of ${h.due}` : `${h.days.filter((d) => d.status === 'missed' || d.status === 'frozen').length} missed`})`).join(', ')
-              : 'Nothing – well done.'}
-          </p>
+          <SectionHead title="Slipped" />
+          <div className="card card-pad">{verdict(slipped, 'Nothing – well done.', (h) => (h.unit === 'weeks' ? `${h.done} of ${h.due}` : `${h.days.filter((d) => d.status === 'missed' || d.status === 'frozen').length} missed`))}</div>
         </div>
       </section>
     </div>

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { saveSettings, useApp } from '../core/store';
 import { refreshTyping, useTypingStatus } from '../core/typingSync';
 import { Section } from '../components/Section';
+import { Row } from '../components/ui';
 
 export function MonkeytypeSection() {
   const { settings } = useApp();
@@ -17,26 +18,26 @@ export function MonkeytypeSection() {
   };
   return (
     <Section title="Monkeytype" id="monkeytype">
-      <p className="muted small">
-        monkeytype.com → Account settings → Ape keys → Generate, then switch the key to <b>active</b> and paste it here. It syncs encrypted to your
-        other devices, so you paste it once.
-      </p>
       {settings.apeKey ? (
-        <div className="row">
-          <span className="grow small">ApeKey saved{st.error ? '' : st.at ? ' · working' : ''}</span>
-          <button className="btn small" onClick={() => void saveSettings({ apeKey: undefined })}>Remove</button>
-        </div>
+        <Row title="ApeKey" desc={st.error ? undefined : st.at ? 'Saved and working.' : 'Saved.'}>
+          <button className="btn btn-sm btn-danger" onClick={() => void saveSettings({ apeKey: undefined })}>Remove</button>
+        </Row>
       ) : (
-        <div className="row">
-          <input className="grow" type="password" autoComplete="off" value={key} onChange={(e) => setKey(e.target.value)} placeholder="ApeKey"
-            style={{ minHeight: 42, padding: '8px 12px', borderRadius: 12, border: '1px solid var(--line-2)', background: 'transparent', fontSize: 16 }} />
-          <button className="btn primary" disabled={!key.trim()} onClick={() => void saveKey()}>Save</button>
+        <div className="setting" style={{ display: 'block' }}>
+          <div className="setting-text" style={{ marginBottom: 10 }}>
+            <b>ApeKey</b>
+            <span>monkeytype.com → Account settings → Ape keys → Generate, then switch it to <b>active</b> and paste it here. It syncs encrypted to your other devices.</span>
+          </div>
+          <div className="row" style={{ flexWrap: 'nowrap' }}>
+            <input className="input" type="password" autoComplete="off" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Paste your ApeKey" />
+            <button className="btn btn-primary" disabled={!key.trim()} onClick={() => void saveKey()}>Save</button>
+          </div>
         </div>
       )}
-      {st.error && <p className="small" style={{ color: 'var(--bad)' }}>{st.error}</p>}
-      <div className="row">
-        <label className="field grow">Started at (WPM)<input inputMode="numeric" value={start} onChange={(e) => setStart(e.target.value)} onBlur={() => Number(start) > 0 && void saveSettings({ wpmStart: Number(start) })} /></label>
-        <label className="field grow">Goal (WPM)<input inputMode="numeric" value={goal} onChange={(e) => setGoal(e.target.value)} onBlur={() => Number(goal) > 0 && void saveSettings({ wpmGoal: Number(goal) })} /></label>
+      {st.error && <div className="notice bad" style={{ margin: '8px 0' }}>{st.error}</div>}
+      <div className="fields" style={{ paddingTop: 12 }}>
+        <label className="field">Started at (WPM)<input inputMode="numeric" value={start} onChange={(e) => setStart(e.target.value)} onBlur={() => Number(start) > 0 && void saveSettings({ wpmStart: Number(start) })} /></label>
+        <label className="field">Goal (WPM)<input inputMode="numeric" value={goal} onChange={(e) => setGoal(e.target.value)} onBlur={() => Number(goal) > 0 && void saveSettings({ wpmGoal: Number(goal) })} /></label>
       </div>
     </Section>
   );

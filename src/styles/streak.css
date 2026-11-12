@@ -1,0 +1,200 @@
+/*
+ * Streak's own styles, on top of Study Desk's (tokens, base, components, apple). Everything uses Study Desk's
+ * tokens, so all four looks (Leather, Night, Glass, Apple) apply automatically.
+ */
+
+/* ---- Streak's accent: Koban gold (Apple look: Apple's orange, like Study Desk uses Apple's blue) ---- */
+:root[data-app='streak']:not([data-surface='apple']) {
+  --accent: #ffd36e; --accent-hover: #ffe09a; --accent-tint: rgba(255, 211, 110, 0.18); --accent-ink: #3a2405; --seal: #ffd36e;
+  --ice: #bfe6ff; --ice-tint: rgba(191, 230, 255, 0.45);
+  /* habit colours – light pastels that read on both leather tones (like Study Desk's subject colours) */
+  --h-red: #ffc6bd; --h-orange: #ffcf99; --h-yellow: #ffe08a; --h-green: #bdecc6; --h-teal: #b8ece2;
+  --h-blue: #bfe0ff; --h-indigo: #c9caff; --h-purple: #d9c8ff; --h-pink: #ffc9e3;
+}
+:root[data-app='streak'][data-surface='apple'] {
+  --accent: #ff9500; --accent-hover: #e68600; --accent-tint: rgba(255, 149, 0, 0.14); --accent-ink: #ffffff; --seal: #ff9500;
+  --ice: #32ade6; --ice-tint: rgba(50, 173, 230, 0.28);
+  --h-red: #ff453a; --h-orange: #ff9f0a; --h-yellow: #ffcc00; --h-green: #30b650; --h-teal: #30b0c7;
+  --h-blue: #0a84ff; --h-indigo: #5e5ce6; --h-purple: #af52de; --h-pink: #ff375f;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-app='streak'][data-surface='apple']:not([data-theme='light']) {
+    --accent: #ff9f0a; --accent-hover: #ffb340; --accent-tint: rgba(255, 159, 10, 0.22); --seal: #ff9f0a;
+    --ice: #64d2ff; --ice-tint: rgba(100, 210, 255, 0.3);
+    --h-red: #ff6961; --h-orange: #ffb340; --h-yellow: #ffd60a; --h-green: #32d74b; --h-teal: #40c8e0;
+    --h-blue: #409cff; --h-indigo: #7d7aff; --h-purple: #bf5af2; --h-pink: #ff6482;
+  }
+}
+:root[data-app='streak'][data-surface='apple'][data-theme='dark'] {
+  --accent: #ff9f0a; --accent-hover: #ffb340; --accent-tint: rgba(255, 159, 10, 0.22); --seal: #ff9f0a;
+  --ice: #64d2ff; --ice-tint: rgba(100, 210, 255, 0.3);
+  --h-red: #ff6961; --h-orange: #ffb340; --h-yellow: #ffd60a; --h-green: #32d74b; --h-teal: #40c8e0;
+  --h-blue: #409cff; --h-indigo: #7d7aff; --h-purple: #bf5af2; --h-pink: #ff6482;
+}
+/* the Apple look keeps the accent on buttons even with a course colour set (not used in Streak, but harmless) */
+:root[data-app='streak'][data-surface='apple'] .btn { color: var(--accent); }
+:root[data-app='streak'][data-surface='apple'] .btn-primary { color: var(--accent-ink); }
+
+/* ---- small helpers Study Desk keeps elsewhere ---- */
+.grow { flex: 1 1 auto; min-width: 0; }
+.num { font-variant-numeric: tabular-nums; }
+.bar > i { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width 0.5s var(--ease); }
+.page-head h1 { line-height: 1.1; }
+.page-head .head-actions { display: flex; gap: 8px; align-items: center; }
+.section-head .meta { margin-left: auto; color: var(--ink-3); font-size: 0.85rem; }
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--ink-2); font-weight: 600; min-width: 0; }
+.field :is(input, select), input.input, select.input {
+  min-height: 42px; padding: 8px 12px; border-radius: 12px; border: 1.5px solid var(--line-2); background: var(--surface-2); font-size: 16px; color: var(--ink); font-weight: 400; width: 100%;
+}
+.field :is(input, select):focus, input.input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-tint); }
+:root[data-surface='glass'] .field :is(input, select), :root[data-surface='glass'] input.input { background: color-mix(in srgb, var(--paper) 55%, transparent); }
+:root[data-surface='apple'] .field :is(input, select), :root[data-surface='apple'] input.input { background: var(--track); border-color: transparent; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+.brand .seal-logo img { border-radius: 22%; }
+
+/* ---- Koban purse ---- */
+.purse { display: flex; align-items: center; gap: 16px; }
+.coin {
+  flex: none; display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; color: #3a2405;
+  background: radial-gradient(circle at 35% 30%, #fff1b8, #ffd257 55%, #c98f12);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.15), 0 4px 14px rgba(201, 143, 18, 0.35);
+}
+.coin.sm { width: 22px; height: 22px; }
+.purse-top { display: flex; align-items: baseline; gap: 8px; }
+.balance { font-size: 2.2rem; font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
+.level-pill { margin-left: auto; padding: 3px 10px; border-radius: 999px; background: var(--accent-tint); font-size: 0.78rem; font-weight: 700; white-space: nowrap; }
+.pop { animation: coinPop 0.7s var(--ease); }
+@keyframes coinPop { 0% { transform: scale(1); } 35% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+/* ---- habit rows ---- */
+.habits { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.habit { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-top: 1px solid var(--line); }
+.habit:first-child { border-top: 0; }
+.habit .subject-icon { flex: none; width: 42px; height: 42px; }
+.habit-main { flex: 1 1 auto; min-width: 0; }
+.habit-name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.habit-sub { font-size: 0.8rem; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.streak-n { display: inline-flex; align-items: center; gap: 2px; font-size: 0.82rem; font-weight: 700; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.streak-n.hot { color: var(--accent); }
+:root[data-surface='apple'] .streak-n.hot { color: #ff6b00; }
+.tick {
+  flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; padding: 0;
+  border: 2px solid var(--line-2); background: transparent; color: var(--ink-3); transition: background 0.18s var(--ease), border-color 0.18s, transform 0.1s;
+}
+.tick:active { transform: scale(0.92); }
+.tick.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tick.auto { border-style: dashed; }
+.tick.locked { opacity: 0.75; }
+.rest-note { margin-top: 10px; font-size: 0.82rem; color: var(--ink-3); }
+
+/* subject-icon tiles take the habit colour (Apple look: glossy squircles, from apple.css) */
+.subject-icon[data-color] { --tile: var(--h-blue); }
+.subject-icon[data-color='red'] { --tile: var(--h-red); }
+.subject-icon[data-color='orange'] { --tile: var(--h-orange); }
+.subject-icon[data-color='yellow'] { --tile: var(--h-yellow); }
+.subject-icon[data-color='green'] { --tile: var(--h-green); }
+.subject-icon[data-color='teal'] { --tile: var(--h-teal); }
+.subject-icon[data-color='indigo'] { --tile: var(--h-indigo); }
+.subject-icon[data-color='purple'] { --tile: var(--h-purple); }
+.subject-icon[data-color='pink'] { --tile: var(--h-pink); }
+.subject-icon.sm { width: 32px; height: 32px; border-radius: 10px; }
+
+/* ---- meditation timer ---- */
+.timer { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 8px 0 4px; }
+.timer > svg { width: min(64vw, 240px); height: auto; }
+.timer .time { font-size: 2.8rem; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+
+/* ---- heatmap ---- */
+.streak-stats { display: flex; gap: 28px; margin-bottom: 14px; }
+.streak-stats b { display: block; font-size: 1.6rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
+.streak-stats small { font-size: 0.85rem; font-weight: 600; color: var(--ink-3); }
+.streak-stats span { font-size: 0.78rem; font-weight: 600; color: var(--ink-3); }
+.heat-wrap { overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: 4px; }
+.heat { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 12px); gap: 3px; width: max-content; }
+.heat i { width: 12px; height: 12px; border-radius: 3px; background: var(--track); cursor: pointer; }
+.heat i.done { background: var(--accent); }
+.heat i.missed { background: var(--bad-tint); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 45%, transparent); }
+.heat i.rest { background: repeating-linear-gradient(135deg, var(--line-2) 0 2px, transparent 2px 4px); }
+.heat i.frozen { background: var(--ice-tint); box-shadow: inset 0 0 0 1px var(--ice); }
+.heat i.pending { box-shadow: inset 0 0 0 1.5px var(--accent); background: transparent; }
+.heat i.future { background: transparent; cursor: default; }
+.heat i.sel { outline: 2px solid var(--ink); outline-offset: 1px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.75rem; color: var(--ink-3); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.legend .done { background: var(--accent); }
+.legend .missed { background: var(--bad-tint); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 45%, transparent); }
+.legend .rest { background: repeating-linear-gradient(135deg, var(--line-2) 0 2px, transparent 2px 4px); }
+.legend .frozen { background: var(--ice-tint); box-shadow: inset 0 0 0 1px var(--ice); }
+
+/* ---- shop ---- */
+.badges { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.badges li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; font-size: 0.8rem; font-weight: 600; color: var(--ink-3); background: var(--track); }
+.badges li.earned { color: var(--ink); background: var(--accent-tint); }
+.badges li.earned svg { color: var(--accent); }
+.history { list-style: none; margin: 0; padding: 0; }
+.history li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 0.9rem; }
+.history li:first-child { border-top: 0; }
+.history li > .num { white-space: nowrap; font-weight: 600; }
+.history small { display: block; color: var(--ink-3); font-size: 0.78rem; }
+
+/* ---- editors ---- */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips .chip { min-height: 36px; min-width: 44px; justify-content: center; padding: 4px 10px; font-size: 0.82rem; }
+.check { display: flex; align-items: center; gap: 10px; font-size: 0.92rem; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+.sub-box { padding: 14px; border-radius: 16px; background: var(--paper-2); display: flex; flex-direction: column; gap: 12px; }
+:root[data-surface='glass'] .sub-box { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+:root[data-surface='apple'] .sub-box { background: var(--paper); }
+.sub-box > b { font-size: 0.9rem; }
+.icon-pick { display: grid; grid-template-columns: repeat(auto-fill, 42px); gap: 6px; }
+.icon-pick button { width: 42px; height: 42px; border-radius: 12px; border: 1.5px solid var(--line); background: transparent; color: var(--ink-2); display: grid; place-items: center; padding: 0; }
+.icon-pick button.on { background: var(--accent-tint); border-color: var(--accent); color: var(--ink); }
+.color-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+.color-pick button { width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent; padding: 0; }
+.color-pick button.on { border-color: var(--ink); box-shadow: inset 0 0 0 3px var(--surface); }
+.list-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.list-row:first-child { border-top: 0; }
+.list-row .name { flex: 1 1 auto; min-width: 0; text-align: left; background: none; border: 0; padding: 0; font-weight: 600; color: var(--ink); }
+
+/* ---- typing ---- */
+.chart { position: relative; touch-action: pan-y; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart-axis { font-size: 9px; fill: var(--ink-3); font-family: var(--font-sans); }
+.chart-tip {
+  position: absolute; top: -6px; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap; z-index: 2;
+  display: flex; flex-direction: column; padding: 6px 10px; border-radius: 10px; font-size: 0.75rem; line-height: 1.3;
+  background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow-lg);
+}
+.chart-tip b { font-size: 0.9rem; color: var(--ink); }
+.chart-tip span { color: var(--ink-3); }
+.chart-table { margin-top: 10px; }
+.chart-table summary { cursor: pointer; font-size: 0.82rem; color: var(--ink-3); }
+.chart-table table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 6px; }
+.chart-table td, .chart-table th { padding: 5px 6px; border-top: 1px solid var(--line); text-align: left; }
+.chart-table th { color: var(--ink-3); font-weight: 600; }
+.goal-row { display: flex; align-items: center; gap: 10px; margin-top: 16px; font-size: 0.85rem; }
+.goal-row .bar { flex: 1 1 auto; height: 8px; }
+
+/* ---- week ---- */
+.wk-grid { display: flex; flex-direction: column; gap: 6px; }
+.wk-row { display: grid; grid-template-columns: minmax(0, 1fr) repeat(7, 30px) 30px; gap: 4px; align-items: center; }
+.wk-head span { text-align: center; font-size: 0.72rem; color: var(--ink-3); font-weight: 700; }
+.wk-head span.today { color: var(--accent); }
+.wk-name { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; min-width: 0; }
+.wk-name .subject-icon { flex: none; width: 24px; height: 24px; border-radius: 7px; }
+.wk-name span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wk-cell { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--track); color: var(--ink-3); }
+.wk-cell.done { background: var(--accent); color: var(--accent-ink); }
+.wk-cell.missed { background: var(--bad-tint); color: var(--bad); }
+.wk-cell.frozen { background: var(--ice-tint); color: var(--ink); }
+.wk-cell.rest { background: repeating-linear-gradient(135deg, var(--line-2) 0 2px, transparent 2px 5px); }
+.wk-cell.pending { box-shadow: inset 0 0 0 1.5px var(--accent); background: transparent; }
+.wk-cell.future, .wk-cell.none { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+@media (max-width: 420px) {
+  .wk-row { grid-template-columns: minmax(0, 1fr) repeat(7, 26px) 24px; gap: 3px; }
+  .wk-cell { width: 25px; height: 25px; }
+  .wk-name .subject-icon { display: none; }
+}
+.verdicts { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.verdicts h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }

@@ -160,7 +160,7 @@ export function completion(h: Habit, v: HabitVersion, day: Day, f: Facts, ix: In
   if (m) {
     if (m.source === 'timer') return { via: 'timer', detail: `${m.minutes ?? ''} min timer`.trim(), markId: m.id };
     if (m.source === 'typing') return { via: 'typing', detail: `${m.wpm ?? '–'} WPM, ${m.acc ?? '–'} %`, markId: m.id };
-    return { via: 'manual', detail: 'Ticked', markId: m.id };
+    return { via: 'manual', detail: 'Done', markId: m.id };
   }
   return null;
 }

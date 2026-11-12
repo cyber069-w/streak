@@ -4,10 +4,10 @@ import { importBackup, makeBackup, parseBackup } from '../core/backup';
 import { connectSync, disconnectSync, PasswordMismatchError, syncNow, useSyncStatus } from '../core/sync';
 import { Icon } from '../components/Icon';
 import { Section } from '../components/Section';
+import { PageHead, Row, Seg } from '../components/ui';
 import { HabitsSection } from './HabitEditor';
 import { MonkeytypeSection } from './MonkeytypeSettings';
 import { LOOKS, lookOf, readSurface, readTheme, saveLook, type Look, type Surface, type Theme } from '../lib/look';
-import { navigate } from '../lib/router';
 
 const ago = (ms?: number) => {
   if (!ms) return 'never';
@@ -47,42 +47,38 @@ function SyncSection() {
 
   if (st.phase !== 'off') {
     return (
-      <Section title="Sync" id="sync">
-        <div className="row">
-          <Icon name="cloud" />
-          <div className="grow">
-            <div style={{ fontWeight: 600 }}>{st.repo}</div>
-            <div className="muted small">
-              {st.phase === 'syncing' ? 'Syncing…' : `Last sync ${ago(st.lastSync)}`}
-              {st.devices && ` · ${Object.values(st.devices).map((d) => d.name).join(', ')}`}
-            </div>
-          </div>
-          <button className="btn small" onClick={() => void syncNow()} disabled={st.phase === 'syncing'}><Icon name="refresh" size={16} /> Sync</button>
-        </div>
-        {st.error && <p className="small" style={{ color: 'var(--bad)' }}>{st.error}</p>}
-        <div className="small">
-          <b>Study Desk:</b>{' '}
-          {st.studyDesk?.error ? <span style={{ color: 'var(--bad)' }}>{st.studyDesk.error}</span> : st.studyDesk?.at ? `read ${ago(st.studyDesk.at)} (read-only)` : 'not read yet'}
-        </div>
+      <Section title="Device sync" id="sync">
+        <Row
+          title={<span className={`sync-status ${st.phase}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><span className="sync-dot" aria-hidden="true" />{st.repo}</span>}
+          desc={`${st.phase === 'syncing' ? 'Syncing…' : `Last sync ${ago(st.lastSync)}`}${st.devices ? ` · ${Object.values(st.devices).map((d) => d.name).join(', ')}` : ''}`}
+        >
+          <button className="btn btn-sm" onClick={() => void syncNow()} disabled={st.phase === 'syncing'}><Icon name="refresh" size={16} /> Sync now</button>
+        </Row>
+        <Row title="Study Desk data" desc={st.studyDesk?.error ?? (st.studyDesk?.at ? `Read ${ago(st.studyDesk.at)} – read-only, CFA and Japanese tick themselves.` : 'Not read yet.')} />
+        {st.error && <div className="notice bad" style={{ margin: '8px 0' }}>{st.error}</div>}
         {msg && <p className="small muted">{msg}</p>}
-        <div><button className="btn small" onClick={() => void disconnectSync()}>Disconnect this device</button></div>
+        <Row title="This device" desc="Disconnecting keeps your data here and on GitHub.">
+          <button className="btn btn-sm btn-danger" onClick={() => void disconnectSync()}>Disconnect</button>
+        </Row>
       </Section>
     );
   }
   return (
-    <Section title="Sync" id="sync">
-      <p className="muted small">
+    <Section title="Device sync" id="sync">
+      <p className="muted small" style={{ margin: '4px 0 14px' }}>
         Use the same private repository, token and sync password as in Study Desk. Streak keeps its own encrypted file (<code>streak.enc</code>) next to
         Study Desk’s and only ever <i>reads</i> Study Desk’s data.
       </p>
+      <div className="stack" style={{ ['--gap' as string]: '12px' }}>
       <label className="field">Repository<input value={repo} onChange={(e) => setRepo(e.target.value)} placeholder="owner/study-sync" autoCapitalize="off" autoCorrect="off" spellCheck={false} /></label>
       <label className="field">GitHub token<input value={token} onChange={(e) => setToken(e.target.value)} type="password" autoComplete="off" placeholder="github_pat_…" /></label>
       <label className="field">Sync password<input value={password} onChange={(e) => setPassword(e.target.value)} type="password" autoComplete="off" /></label>
       <div className="row">
-        <button className="btn primary" disabled={busy} onClick={() => void connect()}>{busy ? 'Connecting…' : 'Connect'}</button>
+        <button className="btn btn-primary" disabled={busy} onClick={() => void connect()}>{busy ? 'Connecting…' : 'Connect'}</button>
         {mismatch && <button className="btn" disabled={busy} onClick={() => void connect(true)}>Start Streak’s file fresh</button>}
       </div>
-      {msg && <p className="small" style={{ color: 'var(--bad)' }}>{msg}</p>}
+      {msg && <div className="notice bad">{msg}</div>}
+      </div>
     </Section>
   );
 }
@@ -110,11 +106,12 @@ function BackupSection() {
   };
   return (
     <Section title="Backup">
-      <p className="muted small">A JSON file with everything (including your Monkeytype key – keep it private). Importing merges; it never deletes.</p>
-      <div className="row">
-        <button className="btn" onClick={download}><Icon name="download" size={18} /> Export</button>
-        <label className="btn"><Icon name="upload" size={18} /> Import<input type="file" accept="application/json,.json" hidden onChange={(e) => void upload(e.target.files?.[0])} /></label>
-      </div>
+      <Row title="Export" desc="A JSON file with everything (including your Monkeytype key – keep it private).">
+        <button className="btn btn-sm" onClick={download}><Icon name="download" size={16} /> Export</button>
+      </Row>
+      <Row title="Import" desc="Merges a backup into this device; it never deletes anything.">
+        <label className="btn btn-sm"><Icon name="upload" size={16} /> Import<input type="file" accept="application/json,.json" hidden onChange={(e) => void upload(e.target.files?.[0])} /></label>
+      </Row>
       {msg && <p className="small muted">{msg}</p>}
     </Section>
   );
@@ -130,25 +127,15 @@ function LookSection() {
     saveLook(s, t);
   };
   return (
-    <Section title="Look">
-      <p className="muted small">The same looks as Study Desk. Leather and Night: flat warm panels. Glass: frosted panels over leather. Apple: neutral panels and the system font.</p>
-      <div className="seg" role="radiogroup" aria-label="Look">
-        {(Object.keys(LOOKS) as Look[]).map((l) => (
-          <button key={l} role="radio" aria-checked={look === l} className={look === l ? 'on' : ''}
-            onClick={() => set(LOOKS[l].surface, LOOKS[l].theme ?? (surface === 'flat' ? 'system' : theme))}>
-            {LOOKS[l].label}
-          </button>
-        ))}
-      </div>
+    <Section title="Display">
+      <Row title="Look" desc="The same looks as Study Desk. Leather and Night: flat warm panels. Glass: frosted panels over leather. Apple: neutral panels, system font.">
+        <Seg label="Look" value={look} options={(Object.keys(LOOKS) as Look[]).map((l) => [l, LOOKS[l].label])}
+          onChange={(l) => set(LOOKS[l].surface, LOOKS[l].theme ?? (surface === 'flat' ? 'system' : theme))} />
+      </Row>
       {surface !== 'flat' && (
-        <>
-          <span className="small muted">Appearance – System follows your device</span>
-          <div className="seg" role="radiogroup" aria-label="Appearance">
-            {(['system', 'light', 'dark'] as const).map((t) => (
-              <button key={t} role="radio" aria-checked={theme === t} className={theme === t ? 'on' : ''} onClick={() => set(surface, t)}>{t[0].toUpperCase() + t.slice(1)}</button>
-            ))}
-          </div>
-        </>
+        <Row title="Appearance" desc="Light or dark – System follows your device.">
+          <Seg label="Appearance" value={theme} options={[['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]} onChange={(t) => set(surface, t)} />
+        </Row>
       )}
     </Section>
   );
@@ -156,17 +143,16 @@ function LookSection() {
 
 export function Settings() {
   return (
-    <div className="page stack">
-      <header className="page-head">
-        <button className="icon-btn" onClick={() => navigate('/')} aria-label="Back"><Icon name="left" /></button>
-        <h1>Settings</h1>
-      </header>
-      <HabitsSection />
-      <SyncSection />
-      <MonkeytypeSection />
-      <BackupSection />
-      <LookSection />
-      <p className="muted small" style={{ textAlign: 'center' }}>Streak · no accounts, no tracking. Icons: Tabler Icons (MIT).</p>
+    <div className="page">
+      <PageHead title="Settings" sub="Habits, sync, Monkeytype, backup and how Streak looks." />
+      <div className="stack">
+        <HabitsSection />
+        <SyncSection />
+        <MonkeytypeSection />
+        <LookSection />
+        <BackupSection />
+        <p className="faint small center">Streak · offline · no ads · no tracking. Icons: Tabler Icons (MIT).</p>
+      </div>
     </div>
   );
 }

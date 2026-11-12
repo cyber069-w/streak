@@ -1,13 +1,14 @@
 /** Settings → Habits: add, edit, reorder and archive habits. Rule changes apply from tomorrow. */
 import { useState } from 'react';
 import { addDays, dayOf, type Weekday } from '../core/day';
-import { JAPANESE_MODULES } from '../core/defaults';
+import { HABIT_COLORS, JAPANESE_MODULES, habitColor } from '../core/defaults';
 import { latestRules, newHabit, withRules } from '../core/habits';
 import { saveHabits, useApp } from '../core/store';
 import type { Amount, Habit, HabitVersion, Schedule, Source } from '../core/types';
 import { Icon } from '../components/Icon';
 import { Sheet } from '../components/Sheet';
 import { Section } from '../components/Section';
+import { HabitIcon, Seg } from '../components/ui';
 
 const DAYS: Array<[Weekday, string]> = [[1, 'Mo'], [2, 'Tu'], [3, 'We'], [4, 'Th'], [5, 'Fr'], [6, 'Sa'], [7, 'Su']];
 const ICONS = ['meditation', 'keyboard', 'language', 'chart', 'cards', 'barbell', 'notebook', 'book', 'run', 'walk', 'code', 'music', 'bed', 'water', 'star'];
@@ -43,6 +44,7 @@ function Editor({ habit, onClose }: { habit: Habit | null; onClose: () => void }
   const start = habit ? latestRules(habit) : null;
   const [name, setName] = useState(habit?.name ?? '');
   const [icon, setIcon] = useState(habit?.icon ?? 'star');
+  const [color, setColor] = useState(habit ? habitColor(habit) : 'blue');
   const [timeOfDay, setTimeOfDay] = useState(habit?.timeOfDay ?? '');
   const [r, setR] = useState<Rules>(() =>
     start ? { schedule: start.schedule, rest: start.rest, sources: start.sources, koban: start.koban } : { schedule: { kind: 'daily' }, rest: { weekdays: [], dates: [] }, sources: [{ kind: 'manual' }], koban: { default: 10 } },
@@ -59,10 +61,10 @@ function Editor({ habit, onClose }: { habit: Habit | null; onClose: () => void }
     let list = state.habits;
     if (habit) {
       const changed = JSON.stringify(tidy) !== JSON.stringify({ schedule: start!.schedule, rest: start!.rest, sources: start!.sources, koban: start!.koban });
-      const h = { ...(changed ? withRules(habit, tidy, Date.now(), tz) : habit), name: name.trim(), icon, ...(timeOfDay ? { timeOfDay: timeOfDay as Habit['timeOfDay'] } : { timeOfDay: undefined }) };
+      const h = { ...(changed ? withRules(habit, tidy, Date.now(), tz) : habit), name: name.trim(), icon, color, ...(timeOfDay ? { timeOfDay: timeOfDay as Habit['timeOfDay'] } : { timeOfDay: undefined }) };
       list = list.map((x) => (x.id === h.id ? h : x));
     } else {
-      const h = newHabit(name.trim(), icon, Math.max(-1, ...list.map((x) => x.order)) + 1, tidy, Date.now(), tz);
+      const h = { ...newHabit(name.trim(), icon, Math.max(-1, ...list.map((x) => x.order)) + 1, tidy, Date.now(), tz), color };
       list = [...list, timeOfDay ? { ...h, timeOfDay: timeOfDay as Habit['timeOfDay'] } : h];
     }
     await saveHabits(list);
@@ -83,8 +85,16 @@ function Editor({ habit, onClose }: { habit: Habit | null; onClose: () => void }
       <div className="stack">
         {!isNew && <p className="muted small">Changes to schedule, rest days, sources and Koban apply from tomorrow, so today can’t be changed after the fact.</p>}
         <label className="field">Name<input value={name} onChange={(e) => setName(e.target.value)} autoFocus={isNew} /></label>
-        <div className="icon-pick" role="radiogroup" aria-label="Icon">
-          {ICONS.map((i) => <button key={i} type="button" className={icon === i ? 'on' : ''} onClick={() => setIcon(i)} aria-label={i} aria-checked={icon === i} role="radio"><Icon name={i} /></button>)}
+        <div className="row" style={{ flexWrap: 'nowrap', alignItems: 'flex-start' }}>
+          <HabitIcon habit={{ id: habit?.id ?? 'new', icon, color }} />
+          <div className="stack grow" style={{ ['--gap' as string]: '10px' }}>
+            <div className="icon-pick" role="radiogroup" aria-label="Icon">
+              {ICONS.map((i) => <button key={i} type="button" className={icon === i ? 'on' : ''} onClick={() => setIcon(i)} aria-label={i} aria-checked={icon === i} role="radio"><Icon name={i} /></button>)}
+            </div>
+            <div className="color-pick" role="radiogroup" aria-label="Colour">
+              {HABIT_COLORS.map((c) => <button key={c} type="button" className={color === c ? 'on' : ''} style={{ background: `var(--h-${c})` }} onClick={() => setColor(c)} aria-label={c} aria-checked={color === c} role="radio" />)}
+            </div>
+          </div>
         </div>
 
         <div className="sub-box">
@@ -92,14 +102,11 @@ function Editor({ habit, onClose }: { habit: Habit | null; onClose: () => void }
           {kindLocked ? (
             <p className="muted small">{r.schedule.kind === 'perWeek' ? 'Times per week' : 'Daily / on chosen days'} (fixed once a habit has history)</p>
           ) : (
-            <div className="seg">
-              <button className={r.schedule.kind === 'daily' ? 'on' : ''} onClick={() => setSchedule({ kind: 'daily' })}>Daily</button>
-              <button className={r.schedule.kind === 'weekdays' ? 'on' : ''} onClick={() => setSchedule({ kind: 'weekdays', days: [1, 2, 3, 4, 5] })}>Some days</button>
-              <button className={r.schedule.kind === 'perWeek' ? 'on' : ''} onClick={() => setSchedule({ kind: 'perWeek', times: 3 })}>× per week</button>
-            </div>
+            <Seg label="Schedule" value={r.schedule.kind} options={[['daily', 'Daily'], ['weekdays', 'Some days'], ['perWeek', '× per week']]}
+              onChange={(k) => setSchedule(k === 'daily' ? { kind: 'daily' } : k === 'weekdays' ? { kind: 'weekdays', days: [1, 2, 3, 4, 5] } : { kind: 'perWeek', times: 3 })} />
           )}
           {r.schedule.kind === 'daily' && kindLocked && (
-            <button className="btn small" onClick={() => setSchedule({ kind: 'weekdays', days: [1, 2, 3, 4, 5, 6, 7] })}>Only on some days</button>
+            <button className="btn btn-sm" onClick={() => setSchedule({ kind: 'weekdays', days: [1, 2, 3, 4, 5, 6, 7] })}>Only on some days</button>
           )}
           {r.schedule.kind === 'weekdays' && <DayChips value={r.schedule.days} onChange={(days) => setSchedule({ kind: 'weekdays', days })} />}
           {r.schedule.kind === 'perWeek' && (
@@ -137,7 +144,7 @@ function Editor({ habit, onClose }: { habit: Habit | null; onClose: () => void }
             <span className="muted small">Planned single rest days (from tomorrow on)</span>
             <div className="row">
               <input className="grow" type="date" min={addDays(today, 1)} value={newRest} onChange={(e) => setNewRest(e.target.value)} style={{ minHeight: 40, borderRadius: 12, border: '1px solid var(--line-2)', background: 'transparent', padding: '6px 10px' }} />
-              <button className="btn small" disabled={!newRest || newRest <= today} onClick={() => { setR({ ...r, rest: { ...r.rest, dates: [...r.rest.dates, newRest] } }); setNewRest(''); }}>Add</button>
+              <button className="btn btn-sm" disabled={!newRest || newRest <= today} onClick={() => { setR({ ...r, rest: { ...r.rest, dates: [...r.rest.dates, newRest] } }); setNewRest(''); }}>Add</button>
             </div>
             {futureRest.map((d) => (
               <div key={d} className="list-row small">
@@ -178,7 +185,7 @@ function Editor({ habit, onClose }: { habit: Habit | null; onClose: () => void }
         </div>
 
         <div className="row">
-          <button className="btn primary" disabled={!name.trim() || !r.sources.length} onClick={() => void save()}>Save</button>
+          <button className="btn btn-primary" disabled={!name.trim() || !r.sources.length} onClick={() => void save()}>Save</button>
           {!isNew && <button className="btn" onClick={() => void archive()}><Icon name="archive" size={18} /> Archive</button>}
         </div>
         {!isNew && <p className="muted small">Archiving keeps its history and Koban; it just stops tracking it from tomorrow.</p>}
@@ -198,17 +205,18 @@ export function HabitsSection() {
   };
   return (
     <Section title="Habits" id="habits">
+      <p className="muted small" style={{ margin: '4px 0 8px' }}>Tap a habit to change its schedule, rest days, how it’s completed and its Koban.</p>
       <div>
         {active.map((h, i) => (
           <div key={h.id} className="list-row">
-            <span className="habit-icon"><Icon name={h.icon} size={20} /></span>
-            <button className="grow" style={{ textAlign: 'left', background: 'none', border: 0, padding: 0, fontWeight: 600 }} onClick={() => setEdit(h)}>{h.name}</button>
+            <HabitIcon habit={h} className="sm" size={18} />
+            <button className="name" onClick={() => setEdit(h)}>{h.name}</button>
             <button className="icon-btn" disabled={i === 0} onClick={() => move(i, -1)} aria-label={`Move ${h.name} up`}><Icon name="up" size={18} /></button>
             <button className="icon-btn" disabled={i === active.length - 1} onClick={() => move(i, 1)} aria-label={`Move ${h.name} down`}><Icon name="down" size={18} /></button>
           </div>
         ))}
       </div>
-      <div><button className="btn small" onClick={() => setEdit('new')}><Icon name="plus" size={16} /> Add habit</button></div>
+      <div style={{ marginTop: 10 }}><button className="btn btn-sm" onClick={() => setEdit('new')}><Icon name="plus" size={16} /> Add habit</button></div>
       {edit && <Editor habit={edit === 'new' ? null : edit} onClose={() => setEdit(null)} />}
     </Section>
   );

@@ -1,7 +1,11 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@fontsource-variable/roboto-mono';
-import './styles/app.css';
+import './styles/tokens.css';
+import './styles/base.css';
+import './styles/components.css';
+import './styles/apple.css';
+import './styles/streak.css';
 import { App } from './App';
 import { initStore } from './core/store';
 import { startSync } from './core/sync';

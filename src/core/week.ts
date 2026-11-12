@@ -7,6 +7,7 @@ export type HabitWeek = {
   id: string;
   name: string;
   icon: string;
+  color?: string;
   unit: 'days' | 'weeks';
   days: Array<{ day: Day; status: DayStatus | 'future' }>;
   done: number;
@@ -52,7 +53,7 @@ export function weekSummary(report: Report, purchases: Purchase[], week: Day, tz
       const slipped = cells.some((c) => c.status === 'missed' || c.status === 'frozen');
       verdict = slipped ? 'slipped' : due === 0 ? 'rest' : open ? 'open' : 'held';
     }
-    habits.push({ id: r.habit.id, name: r.habit.name, icon: r.habit.icon, unit: r.unit, days: cells, done, due, verdict });
+    habits.push({ id: r.habit.id, name: r.habit.name, icon: r.habit.icon, color: r.habit.color, unit: r.unit, days: cells, done, due, verdict });
   }
   const inWeek = (day: Day) => day >= week && day <= addDays(week, 6);
   const earned = report.earnings.filter((e) => inWeek(e.day)).reduce((n, e) => n + e.amount, 0);

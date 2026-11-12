@@ -5,6 +5,7 @@ import { canBuyFreeze, canBuyReward, freezeOffer, validFreezes } from '../core/s
 import { addPurchase, saveRewards, useApp, useReport } from '../core/store';
 import type { Reward } from '../core/types';
 import { Icon } from '../components/Icon';
+import { EmptyState, PageHead, SectionHead } from '../components/ui';
 import { Sheet } from '../components/Sheet';
 import { KobanCard } from './Today';
 
@@ -30,7 +31,7 @@ function RewardSheet({ reward, onClose }: { reward: Reward | null; onClose: () =
         <label className="field">What<input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Evening off" autoFocus={!reward} /></label>
         <label className="field">Price in Koban<input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="numeric" /></label>
         <div className="row">
-          <button className="btn primary" disabled={!ok} onClick={() => void save()}>Save</button>
+          <button className="btn btn-primary" disabled={!ok} onClick={() => void save()}>Save</button>
           {reward && <button className="btn" onClick={() => void archive()}><Icon name="archive" size={18} /> Remove</button>}
         </div>
       </div>
@@ -80,61 +81,57 @@ export function Shop() {
   const history = [...state.purchases].sort((a, b) => b.at - a.at);
 
   return (
-    <div className="page stack">
-      <header className="page-head"><h1>Shop</h1></header>
-      <KobanCard report={report} />
-
-      <section className="glass">
-        <div className="glass-head">
-          <h2>Rewards</h2>
-          <button className="btn small" onClick={() => setEdit('new')}><Icon name="plus" size={16} /> New</button>
-        </div>
-        <ul className="habits">
-          {rewards.map((r) => {
-            const can = report.balance >= r.price;
-            return (
-              <li key={r.id} className="habit">
-                <span className="habit-icon"><Icon name="gift" size={22} /></span>
-                <button className="grow" style={{ textAlign: 'left', background: 'none', border: 0, padding: 0 }} onClick={() => setEdit(r)} aria-label={`Edit ${r.name}`}>
-                  <div className="habit-name">{r.name}</div>
-                  <div className="habit-sub num">{r.price} Koban{can ? '' : ` · ${r.price - report.balance} to go`}</div>
-                </button>
-                <button className="btn small primary" disabled={!can} onClick={() => buyReward(r)}>Buy</button>
-              </li>
-            );
-          })}
-          {!rewards.length && <li className="muted small">No rewards yet – add something you look forward to.</li>}
-        </ul>
-      </section>
-
-      <section className="glass">
-        <div className="glass-head">
-          <h2>Streak freeze</h2>
-          <span className="muted small num">{offer.boughtThisMonth} / {offer.limit} this month</span>
-        </div>
-        <div className="stack">
-          <p className="muted small">
-            Protects one habit’s streak on its first missed day (per-week habits: a missed week) <b>after</b> the day you buy it – never
-            retroactively. One waiting freeze per habit, {offer.limit} per month, and each one this month costs more.
-          </p>
-          {target && (
-            <label className="field">Habit
-              <select value={target.habit.id} onChange={(e) => setFreezeFor(e.target.value)}>
-                {active.map((r) => <option key={r.habit.id} value={r.habit.id}>{r.habit.name}{r.waitingFreeze ? ' (freeze waiting)' : ''}</option>)}
-              </select>
-            </label>
-          )}
-          <div className="row">
-            <span className="coin sm"><Icon name="snow" size={14} /></span>
-            <span className="grow num">{offer.price === null ? 'None left this month' : `${offer.price} Koban`}</span>
-            <button className="btn small primary" disabled={!check?.ok} onClick={buyFreeze}>Buy</button>
+    <div className="page">
+      <PageHead eyebrow="Spend your Koban" title="Shop" sub={`${report.xp} earned so far · ${report.spent} spent`} />
+      <div className="bento">
+        <div style={{ gridColumn: 'span 5' }}><KobanCard report={report} /></div>
+        <section className="glass" style={{ gridColumn: 'span 7' }}>
+          <div className="glass-head">
+            <h2>Streak freeze</h2>
+            <span className="faint small num">{offer.boughtThisMonth} / {offer.limit} this month</span>
           </div>
-          {check && !check.ok && <p className="small muted">{check.reason}</p>}
+          <div className="stack" style={{ ['--gap' as string]: '12px' }}>
+            <p className="faint small">
+              Protects one habit’s streak on its first missed day (per-week habits: a missed week) <b>after</b> the day you buy it – never
+              retroactively. One waiting freeze per habit, {offer.limit} per month, and each one this month costs more.
+            </p>
+            <div className="row" style={{ flexWrap: 'nowrap' }}>
+              {target && (
+                <select className="input" style={{ flex: '1 1 auto', minWidth: 0 }} value={target.habit.id} onChange={(e) => setFreezeFor(e.target.value)} aria-label="Habit to protect">
+                  {active.map((r) => <option key={r.habit.id} value={r.habit.id}>{r.habit.name}{r.waitingFreeze ? ' (freeze waiting)' : ''}</option>)}
+                </select>
+              )}
+              <button className="btn btn-primary" disabled={!check?.ok} onClick={buyFreeze}><Icon name="snow" size={16} /> {offer.price === null ? 'None left' : `${offer.price}`}</button>
+            </div>
+            {check && !check.ok && <p className="small" style={{ color: 'var(--bad)' }}>{check.reason}</p>}
+          </div>
+        </section>
+      </div>
+
+      <section className="section">
+        <SectionHead title="Rewards" action={<button className="btn btn-sm" onClick={() => setEdit('new')}><Icon name="plus" size={16} /> New reward</button>} />
+        <div className="card card-pad">
+          <ul className="habits">
+            {rewards.map((r) => {
+              const can = report.balance >= r.price;
+              return (
+                <li key={r.id} className="habit">
+                  <span className="subject-icon" data-color="orange" aria-hidden="true"><Icon name="gift" size={22} /></span>
+                  <button className="habit-main" style={{ textAlign: 'left', background: 'none', border: 0, padding: 0, color: 'inherit' }} onClick={() => setEdit(r)} aria-label={`Edit ${r.name}`}>
+                    <div className="habit-name">{r.name}</div>
+                    <div className="habit-sub num">{r.price} Koban{can ? '' : ` · ${r.price - report.balance} to go`}</div>
+                  </button>
+                  <button className="btn btn-sm btn-primary" disabled={!can} onClick={() => buyReward(r)}>Buy</button>
+                </li>
+              );
+            })}
+          </ul>
+          {!rewards.length && <EmptyState icon="gift" title="No rewards yet" hint="Add something you look forward to." action={{ label: 'New reward', onClick: () => setEdit('new') }} />}
         </div>
       </section>
 
-      <section className="glass">
-        <div className="glass-head"><h2>Badges</h2><span className="muted small">Level {report.level.level}</span></div>
+      <section className="section">
+        <SectionHead title="Badges" meta={`${report.badges.filter((b) => b.earned).length} of ${report.badges.length}`} />
         <ul className="badges">
           {report.badges.map((b) => (
             <li key={b.id} className={b.earned ? 'earned' : ''} title={b.earned ? `Earned ${dayLabel(b.earned)}` : 'Not yet'}>
@@ -145,25 +142,26 @@ export function Shop() {
         </ul>
       </section>
 
-      <section className="glass">
-        <div className="glass-head"><h2>History</h2></div>
-        {history.length ? (
-          <ul className="history">
-            {history.map((p) => {
-              const day = dayOf(p.at, rules.tz);
-              const note = p.kind !== 'freeze' ? '' : !valid.has(p.id) ? ' · over the monthly limit, not charged' : usedOn.has(p.id) ? ` · used ${dayLabel(usedOn.get(p.id)!)}` : ' · waiting';
-              return (
-                <li key={p.id}>
-                  <span className="grow">{p.name}<span className="muted small"> · {dayLabel(day)}{note}</span></span>
-                  <span className="num">−{valid.has(p.id) || p.kind === 'reward' ? p.price : 0}</span>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <p className="muted small">Nothing bought yet.</p>
-        )}
-        <p className="muted small" style={{ marginTop: 10 }}>Earned so far: {report.xp} · spent: {report.spent}</p>
+      <section className="section">
+        <SectionHead title="History" />
+        <div className="card card-pad">
+          {history.length ? (
+            <ul className="history">
+              {history.map((p) => {
+                const day = dayOf(p.at, rules.tz);
+                const note = p.kind !== 'freeze' ? '' : !valid.has(p.id) ? ' · over the monthly limit, not charged' : usedOn.has(p.id) ? ` · used ${dayLabel(usedOn.get(p.id)!)}` : ' · waiting';
+                return (
+                  <li key={p.id}>
+                    <span className="grow">{p.name}<small>{dayLabel(day)}{note}</small></span>
+                    <span className="num">−{valid.has(p.id) || p.kind === 'reward' ? p.price : 0}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <EmptyState icon="shop" title="Nothing bought yet" hint="Purchases show up here." />
+          )}
+        </div>
       </section>
 
       {edit && <RewardSheet reward={edit === 'new' ? null : edit} onClose={() => setEdit(null)} />}
@@ -173,7 +171,7 @@ export function Shop() {
             <p>{confirm.text}</p>
             <p className="muted small">Balance afterwards: {report.balance - confirm.price} Koban</p>
             <div className="row">
-              <button className="btn primary" onClick={() => void confirm.act().then(() => setConfirm(null))}>Buy</button>
+              <button className="btn btn-primary" onClick={() => void confirm.act().then(() => setConfirm(null))}>Buy</button>
               <button className="btn" onClick={() => setConfirm(null)}>Cancel</button>
             </div>
           </div>

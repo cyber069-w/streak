@@ -6,11 +6,35 @@ import { versionAt, type HabitReport, type Report } from '../core/engine';
 import { addMark, factsOf, getState, toggleTick, useApp, useReport } from '../core/store';
 import { Icon } from '../components/Icon';
 import { MeditationTimer } from '../components/MeditationTimer';
+import { EmptyState, HabitIcon, PageHead, Seg } from '../components/ui';
+import { weekSummary } from '../core/week';
+import { weekStart } from '../core/day';
 import { Sheet } from '../components/Sheet';
-import { navigate } from '../lib/router';
 
 const dateLabel = (day: Day) =>
   new Date(`${day}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' });
+
+function greeting(h: number) {
+  if (h < 5) return 'Good night';
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
+/** This week in one line per habit-day: done / due, Koban earned, perfect-week status. */
+function WeekStrip() {
+  const report = useReport();
+  const { purchases, settings } = useApp();
+  const w = weekSummary(report, purchases, weekStart(report.today), settings.rules.tz);
+  const pct = w.due ? Math.round((w.done / w.due) * 100) : 0;
+  return (
+    <div className="stack" style={{ ['--gap' as string]: '10px' }}>
+      <div className="purse-top"><span className="balance num" style={{ fontSize: '1.6rem' }}>{w.done}/{w.due}</span><span className="faint small">done</span><span className="level-pill">+{w.earned} Koban</span></div>
+      <div className="bar"><i style={{ width: `${pct}%` }} /></div>
+      <span className="faint tiny">{w.perfect === 'yes' ? 'Perfect week!' : w.perfect === 'possible' ? 'A perfect week is still possible (+75 Koban).' : 'No perfect week this time.'}</span>
+    </div>
+  );
+}
 
 /** Morning habits first before noon, evening habits first from 6 pm. */
 function ordered(habits: HabitReport[]): HabitReport[] {
@@ -42,19 +66,18 @@ export function KobanCard({ report }: { report: Report }) {
   }, [report, level]);
 
   return (
-    <div className="glass purse">
-      <span className={`coin${pop ? ' pop' : ''}`}><Icon name="coin" size={26} /></span>
+    <section className="glass purse">
+      <span className={`coin${pop ? ' pop' : ''}`}><Icon name="coin" size={28} /></span>
       <div className="grow">
-        <div className="row" style={{ alignItems: 'baseline' }}>
+        <div className="purse-top">
           <span className="balance num">{report.balance}</span>
-          <span className="muted small">Koban</span>
-          <span className="grow" />
-          <span className="small" style={{ fontWeight: 600 }}>Level {level}</span>
+          <span className="faint small">Koban</span>
+          <span className="level-pill">Level {level}</span>
         </div>
-        <div className="bar" style={{ marginTop: 8 }} aria-label={`${report.xp - from} of ${to - from} XP to level ${level + 1}`}><i style={{ width: `${pct}%` }} /></div>
-        <div className="muted small" style={{ marginTop: 4 }}>{toast ?? `${report.xp} XP · ${to - report.xp} to level ${level + 1}`}</div>
+        <div className="bar" style={{ marginTop: 10 }} aria-label={`${report.xp - from} of ${to - from} XP to level ${level + 1}`}><i style={{ width: `${pct}%` }} /></div>
+        <div className="faint tiny" style={{ marginTop: 6 }}>{toast ?? `${report.xp} XP · ${to - report.xp} to level ${level + 1}`}</div>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -70,11 +93,11 @@ export function TypingEntry({ habitId, day, onClose }: { habitId: string; day: D
     <Sheet title="Typing – enter by hand" onClose={onClose}>
       <div className="stack">
         <p className="muted small">If Monkeytype hasn’t synced (or you typed elsewhere), enter today’s result.</p>
-        <div className="row">
-          <label className="field grow">WPM<input inputMode="numeric" value={wpm} onChange={(e) => setWpm(e.target.value)} autoFocus /></label>
-          <label className="field grow">Accuracy %<input inputMode="decimal" value={acc} onChange={(e) => setAcc(e.target.value)} /></label>
+        <div className="fields">
+          <label className="field">WPM<input inputMode="numeric" value={wpm} onChange={(e) => setWpm(e.target.value)} autoFocus /></label>
+          <label className="field">Accuracy %<input inputMode="decimal" value={acc} onChange={(e) => setAcc(e.target.value)} /></label>
         </div>
-        <button className="btn primary" disabled={!ok} onClick={save}>Save</button>
+        <div><button className="btn btn-primary" disabled={!ok} onClick={save}>Save</button></div>
       </div>
     </Sheet>
   );
@@ -107,50 +130,59 @@ export function Today() {
     setOpen({ kind: 'auto', r, info });
   };
 
+  const best = report.habits.reduce((m, r) => (r.unit === 'days' && r.current > m.n ? { n: r.current, name: r.habit.name } : m), { n: 0, name: '' });
+  const date = new Date(`${report.today}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+
   return (
-    <div className="page stack">
-      <header className="page-head">
-        <h1>{which === 'today' ? 'Today' : 'Yesterday'}</h1>
-        <button className="icon-btn" onClick={() => navigate('/settings')} aria-label="Settings"><Icon name="settings" /></button>
-      </header>
-      <KobanCard report={report} />
-      <section className="glass">
-        <div className="glass-head">
-          <h2>{dateLabel(day)}</h2>
-          <span className="muted small num">{doneCount} / {due.length}</span>
-        </div>
-        <div className="seg" style={{ marginBottom: 6 }}>
-          <button className={which === 'today' ? 'on' : ''} onClick={() => setWhich('today')}>Today</button>
-          <button className={which === 'yesterday' ? 'on' : ''} onClick={() => setWhich('yesterday')}>Fix yesterday</button>
-        </div>
-        <ul className="habits">
-          {due.map(({ r, info }) => {
-            const done = info.status === 'done';
-            const auto = done && !info.markId;
-            return (
-              <li key={r.habit.id} className={`habit${done ? ' done' : ''}`}>
-                <span className="habit-icon"><Icon name={r.habit.icon} size={22} /></span>
-                <div className="grow">
-                  <div className="row" style={{ gap: 8 }}>
-                    <span className="habit-name">{r.habit.name}</span>
-                    <span className={`streak-n${info.hot ? ' hot' : ''}`}><Icon name="flame" size={15} />{info.streak}</span>
+    <div className="page">
+      <PageHead
+        eyebrow={date}
+        title={greeting(new Date().getHours())}
+        sub={`${doneCount} of ${due.length} done ${which === 'today' ? 'today' : 'yesterday'}${best.n >= 2 ? ` · longest streak: ${best.name}, ${best.n} days` : ''}`}
+      />
+      <div className="bento">
+        <section className="glass" style={{ gridColumn: 'span 8' }}>
+          <div className="glass-head">
+            <h2>{which === 'today' ? 'Habits' : `Yesterday · ${dateLabel(day)}`}</h2>
+            <Seg label="Day" value={which} options={[['today', 'Today'], ['yesterday', 'Yesterday']]} onChange={setWhich} />
+          </div>
+          <ul className="habits">
+            {due.map(({ r, info }) => {
+              const done = info.status === 'done';
+              const auto = done && !info.markId;
+              return (
+                <li key={r.habit.id} className={`habit${done ? ' done' : ''}`}>
+                  <HabitIcon habit={r.habit} />
+                  <div className="habit-main">
+                    <div className="habit-name">
+                      {r.habit.name}
+                      <span className={`streak-n${info.hot ? ' hot' : ''}`} title={`Streak: ${info.streak}`}><Icon name="flame" size={15} />{info.streak}</span>
+                    </div>
+                    <div className="habit-sub">{info.status === 'frozen' ? 'Covered by a freeze' : info.status === 'missed' ? `Missed · ${info.sub}` : info.sub}</div>
                   </div>
-                  <div className="habit-sub">{info.status === 'frozen' ? 'Covered by a freeze' : info.status === 'missed' ? `Missed · ${info.sub}` : info.sub}</div>
-                </div>
-                <button
-                  className={`tick${done ? ' on' : ''}${!done && info.mode === 'auto' ? ' auto' : ''}${auto ? ' locked' : ''}`}
-                  onClick={() => tap(r, info)}
-                  aria-pressed={done}
-                  aria-label={`${r.habit.name}: ${done ? 'done' : 'not done'}`}
-                >
-                  {done ? <Icon name="check" size={24} stroke={2.4} /> : info.mode === 'timer' ? <Icon name="play" size={20} /> : info.mode === 'auto' ? <Icon name="info" size={20} /> : null}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-        {rest.length > 0 && <p className="rest-list">Rest day: {rest.map((x) => x.r.habit.name).join(', ')}</p>}
-      </section>
+                  <button
+                    className={`tick${done ? ' on' : ''}${!done && info.mode === 'auto' ? ' auto' : ''}${auto ? ' locked' : ''}`}
+                    onClick={() => tap(r, info)}
+                    aria-pressed={done}
+                    aria-label={`${r.habit.name}: ${done ? 'done' : 'not done'}`}
+                  >
+                    {done ? <Icon name="check" size={24} stroke={2.4} /> : info.mode === 'timer' ? <Icon name="play" size={20} /> : info.mode === 'typing' ? <Icon name="pen" size={18} /> : info.mode === 'auto' ? <Icon name="info" size={20} /> : null}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          {!due.length && <EmptyState icon="moon" title="Nothing due" hint="Every habit rests today." />}
+          {rest.length > 0 && <p className="rest-note">Rest day: {rest.map((x) => x.r.habit.name).join(', ')}</p>}
+        </section>
+        <div className="stack" style={{ gridColumn: 'span 4', ['--gap' as string]: '14px' }}>
+          <KobanCard report={report} />
+          <section className="glass">
+            <div className="glass-head"><h2>This week</h2><a className="btn btn-sm btn-ghost" href="#/week">Review</a></div>
+            <WeekStrip />
+          </section>
+        </div>
+      </div>
 
       {open?.kind === 'timer' && (() => {
         const v = versionAt(open.r.habit, day, tz)!;

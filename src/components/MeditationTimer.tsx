@@ -115,14 +115,14 @@ export function MeditationTimer({ habitId, name, minutes, onClose }: { habitId: 
         {done ? (
           <>
             <p className="muted">Nice. Meditation is ticked off for today.</p>
-            <button className="btn primary" onClick={onClose}>Close</button>
+            <button className="btn btn-primary" onClick={onClose}>Close</button>
           </>
         ) : (
           <div className="row">
             {running ? (
               <button className="btn" onClick={pause}><Icon name="pause" /> Pause</button>
             ) : (
-              <button className="btn primary" onClick={start}><Icon name="play" /> {t.elapsedBefore ? 'Resume' : 'Start'}</button>
+              <button className="btn btn-primary" onClick={start}><Icon name="play" /> {t.elapsedBefore ? 'Resume' : 'Start'}</button>
             )}
             {t.elapsedBefore > 0 && !running && <button className="btn" onClick={reset}>Reset</button>}
           </div>
