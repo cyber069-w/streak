@@ -7,7 +7,7 @@ import { Icon } from '../components/Icon';
 import { EmptyState, HabitIcon, PageHead, SectionHead } from '../components/ui';
 
 const short = (day: Day) => new Date(`${day}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
-const HEAD = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const HEAD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const WORD: Record<string, string> = { done: 'done', missed: 'missed', rest: 'rest day', frozen: 'freeze used', pending: 'today, open', future: 'later', none: 'not tracked', open: 'nothing' };
 
 function Cell({ status }: { status: HabitWeek['days'][number]['status'] }) {
@@ -60,14 +60,17 @@ export function Week() {
           <div className="wk-grid" role="table" aria-label="Habits this week">
             <div className="wk-row wk-head" role="row">
               <span role="columnheader" />
-              {HEAD.map((d, i) => <span key={i} role="columnheader" className={addDays(week, i) === report.today ? 'today' : ''}>{d}</span>)}
-              <span role="columnheader" />
+              {HEAD.map((d, i) => {
+                const day = addDays(week, i);
+                return <span key={i} role="columnheader" className={day === report.today ? 'today' : ''}><i className="wd-long">{d}</i><i className="wd-short">{d[0]}</i><b>{Number(day.slice(8))}</b></span>;
+              })}
+              <span role="columnheader" className="wk-total">Done</span>
             </div>
             {w.habits.map((h) => (
               <div key={h.id} className="wk-row" role="row">
-                <span role="rowheader" className="wk-name"><HabitIcon habit={h} size={14} /><span>{h.name}</span></span>
+                <span role="rowheader" className="wk-name" title={h.name} aria-label={h.name}><HabitIcon habit={h} size={15} /><span>{h.name}</span></span>
                 {h.days.map((d) => <span key={d.day} role="cell"><Cell status={d.status} /></span>)}
-                <span role="cell" className="num tiny faint">{h.unit === 'weeks' ? `${h.done}/${h.due}` : ''}</span>
+                <span role="cell" className={`wk-total num${h.verdict === 'slipped' ? ' bad' : h.verdict === 'held' ? ' good' : ''}`}>{h.done}/{h.due}</span>
               </div>
             ))}
           </div>

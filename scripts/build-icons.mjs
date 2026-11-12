@@ -12,7 +12,7 @@ const NAMES = {
   coin: 'coin', flame: 'flame', snow: 'snowflake', trophy: 'trophy', lock: 'lock', play: 'player-play', pause: 'player-pause',
   stop: 'player-stop', refresh: 'refresh', cloud: 'cloud', key: 'key', download: 'download', upload: 'upload', trash: 'trash',
   pen: 'pencil', undo: 'arrow-back-up', up: 'arrow-up', down: 'arrow-down', archive: 'archive', info: 'info-circle', moon: 'moon',
-  sun: 'sun', gift: 'gift', star: 'star',
+  sun: 'sun', gift: 'gift', star: 'star', medal: 'medal', award: 'award', 'calendar-check': 'calendar-check', month: 'calendar-month',
   // habit icons
   meditation: 'yoga', keyboard: 'keyboard', language: 'language', chart: 'chart-line', cards: 'cards', barbell: 'barbell',
   notebook: 'notebook', book: 'book', run: 'run', code: 'code', music: 'music', bed: 'bed', water: 'droplet', walk: 'walk',

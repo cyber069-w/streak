@@ -21,16 +21,35 @@ function greeting(h: number) {
   return 'Good evening';
 }
 
-/** This week in one line per habit-day: done / due, Koban earned, perfect-week status. */
+/** This week at a glance: one small column per day (done of due), Koban earned, perfect-week status. */
 function WeekStrip() {
   const report = useReport();
   const { purchases, settings } = useApp();
   const w = weekSummary(report, purchases, weekStart(report.today), settings.rules.tz);
-  const pct = w.due ? Math.round((w.done / w.due) * 100) : 0;
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const day = addDays(w.week, i);
+    let done = 0, due = 0;
+    for (const h of w.habits) {
+      if (h.unit === 'weeks') continue;
+      const s = h.days[i].status;
+      if (s === 'done') { done++; due++; } else if (['missed', 'frozen', 'pending', 'future'].includes(s)) due++;
+    }
+    return { day, done, due, future: day > report.today, today: day === report.today };
+  });
   return (
-    <div className="stack" style={{ ['--gap' as string]: '10px' }}>
-      <div className="purse-top"><span className="balance num" style={{ fontSize: '1.6rem' }}>{w.done}/{w.due}</span><span className="faint small">done</span><span className="level-pill">+{w.earned} Koban</span></div>
-      <div className="bar"><i style={{ width: `${pct}%` }} /></div>
+    <div className="stack" style={{ ['--gap' as string]: '12px' }}>
+      <div className="week-mini" role="list" aria-label="This week by day">
+        {days.map((d, i) => (
+          <div key={d.day} role="listitem" className={`wm-day${d.today ? ' today' : ''}${d.future ? ' future' : ''}`} title={`${d.done} of ${d.due} done`}>
+            <span className="wm-track"><i style={{ height: `${d.due ? (d.done / d.due) * 100 : 0}%` }} /></span>
+            <span className="wm-label">{'MTWTFSS'[i]}</span>
+          </div>
+        ))}
+      </div>
+      <div className="split-line">
+        <span><b className="num">{w.done}</b><span className="faint"> of {w.due} done</span></span>
+        <span className="pill">+{w.earned} Koban</span>
+      </div>
       <span className="faint tiny">{w.perfect === 'yes' ? 'Perfect week!' : w.perfect === 'possible' ? 'A perfect week is still possible (+75 Koban).' : 'No perfect week this time.'}</span>
     </div>
   );
@@ -67,15 +86,18 @@ export function KobanCard({ report }: { report: Report }) {
 
   return (
     <section className="glass purse">
-      <span className={`coin${pop ? ' pop' : ''}`}><Icon name="coin" size={28} /></span>
-      <div className="grow">
-        <div className="purse-top">
-          <span className="balance num">{report.balance}</span>
-          <span className="faint small">Koban</span>
-          <span className="level-pill">Level {level}</span>
+      <div className="purse-head">
+        <span className={`coin${pop ? ' pop' : ''}`}><Icon name="coin" size={26} /></span>
+        <div className="grow">
+          <div className="eyebrow">Koban</div>
+          <div className="balance num">{report.balance}</div>
         </div>
-        <div className="bar" style={{ marginTop: 10 }} aria-label={`${report.xp - from} of ${to - from} XP to level ${level + 1}`}><i style={{ width: `${pct}%` }} /></div>
-        <div className="faint tiny" style={{ marginTop: 6 }}>{toast ?? `${report.xp} XP · ${to - report.xp} to level ${level + 1}`}</div>
+        <span className="level-badge" aria-label={`Level ${level}`}><small>Level</small>{level}</span>
+      </div>
+      <div className="bar" aria-label={`${report.xp - from} of ${to - from} XP to level ${level + 1}`}><i style={{ width: `${pct}%` }} /></div>
+      <div className="split-line tiny">
+        <span className="faint">{toast ?? `${report.xp - from} / ${to - from} XP`}</span>
+        <span className="faint">Level {level + 1} at {to} XP</span>
       </div>
     </section>
   );
@@ -140,8 +162,8 @@ export function Today() {
         title={greeting(new Date().getHours())}
         sub={`${doneCount} of ${due.length} done ${which === 'today' ? 'today' : 'yesterday'}${best.n >= 2 ? ` · longest streak: ${best.name}, ${best.n} days` : ''}`}
       />
-      <div className="bento">
-        <section className="glass" style={{ gridColumn: 'span 8' }}>
+      <div className="today-grid">
+        <section className="glass today-main">
           <div className="glass-head">
             <h2>{which === 'today' ? 'Habits' : `Yesterday · ${dateLabel(day)}`}</h2>
             <Seg label="Day" value={which} options={[['today', 'Today'], ['yesterday', 'Yesterday']]} onChange={setWhich} />
@@ -175,13 +197,11 @@ export function Today() {
           {!due.length && <EmptyState icon="moon" title="Nothing due" hint="Every habit rests today." />}
           {rest.length > 0 && <p className="rest-note">Rest day: {rest.map((x) => x.r.habit.name).join(', ')}</p>}
         </section>
-        <div className="stack" style={{ gridColumn: 'span 4', ['--gap' as string]: '14px' }}>
-          <KobanCard report={report} />
-          <section className="glass">
-            <div className="glass-head"><h2>This week</h2><a className="btn btn-sm btn-ghost" href="#/week">Review</a></div>
-            <WeekStrip />
-          </section>
-        </div>
+        <div className="today-koban"><KobanCard report={report} /></div>
+        <section className="glass today-week">
+          <div className="glass-head"><h2>This week</h2><a className="small" href="#/week">Review →</a></div>
+          <WeekStrip />
+        </section>
       </div>
 
       {open?.kind === 'timer' && (() => {

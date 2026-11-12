@@ -5,7 +5,8 @@ import { canBuyFreeze, canBuyReward, freezeOffer, validFreezes } from '../core/s
 import { addPurchase, saveRewards, useApp, useReport } from '../core/store';
 import type { Reward } from '../core/types';
 import { Icon } from '../components/Icon';
-import { EmptyState, PageHead, SectionHead } from '../components/ui';
+import { EmptyState, HabitIcon, PageHead, SectionHead } from '../components/ui';
+import { badgeViews } from '../core/badges';
 import { Sheet } from '../components/Sheet';
 import { KobanCard } from './Today';
 
@@ -79,31 +80,36 @@ export function Shop() {
   const valid = new Set(validFreezes(state.purchases, rules).map((p) => p.id));
   const usedOn = new Map(report.habits.flatMap((r) => r.frozen.map((f) => [f.purchaseId, f.on] as const)));
   const history = [...state.purchases].sort((a, b) => b.at - a.at);
+  const badges = badgeViews(report, Object.values(state.typing), state.marks, state.purchases);
 
   return (
     <div className="page">
       <PageHead eyebrow="Spend your Koban" title="Shop" sub={`${report.xp} earned so far · ${report.spent} spent`} />
-      <div className="bento">
-        <div style={{ gridColumn: 'span 5' }}><KobanCard report={report} /></div>
-        <section className="glass" style={{ gridColumn: 'span 7' }}>
+      <div className="shop-top">
+        <KobanCard report={report} />
+        <section className="glass">
           <div className="glass-head">
             <h2>Streak freeze</h2>
-            <span className="faint small num">{offer.boughtThisMonth} / {offer.limit} this month</span>
+            <span className="pill num">{offer.boughtThisMonth} / {offer.limit} this month</span>
           </div>
-          <div className="stack" style={{ ['--gap' as string]: '12px' }}>
-            <p className="faint small">
-              Protects one habit’s streak on its first missed day (per-week habits: a missed week) <b>after</b> the day you buy it – never
-              retroactively. One waiting freeze per habit, {offer.limit} per month, and each one this month costs more.
-            </p>
-            <div className="row" style={{ flexWrap: 'nowrap' }}>
-              {target && (
-                <select className="input" style={{ flex: '1 1 auto', minWidth: 0 }} value={target.habit.id} onChange={(e) => setFreezeFor(e.target.value)} aria-label="Habit to protect">
-                  {active.map((r) => <option key={r.habit.id} value={r.habit.id}>{r.habit.name}{r.waitingFreeze ? ' (freeze waiting)' : ''}</option>)}
-                </select>
-              )}
-              <button className="btn btn-primary" disabled={!check?.ok} onClick={buyFreeze}><Icon name="snow" size={16} /> {offer.price === null ? 'None left' : `${offer.price}`}</button>
-            </div>
-            {check && !check.ok && <p className="small" style={{ color: 'var(--bad)' }}>{check.reason}</p>}
+          <p className="faint small" style={{ marginBottom: 12 }}>
+            Covers a habit’s first missed day <b>after</b> today (Gym: a missed week). Never retroactive · one per habit · price rises each month.
+          </p>
+          <div className="habit-chips" role="radiogroup" aria-label="Habit to protect">
+            {active.map((r) => (
+              <button key={r.habit.id} role="radio" aria-checked={target?.habit.id === r.habit.id}
+                className={`habit-chip${target?.habit.id === r.habit.id ? ' on' : ''}`} onClick={() => setFreezeFor(r.habit.id)}>
+                <HabitIcon habit={r.habit} className="sm" size={16} />
+                <span>{r.habit.name}</span>
+                {r.waitingFreeze && <Icon name="snow" size={14} />}
+              </button>
+            ))}
+          </div>
+          <div className="split-line" style={{ marginTop: 14, alignItems: 'center' }}>
+            <span className="small">{check && !check.ok ? <span style={{ color: 'var(--bad)' }}>{check.reason}</span> : target ? <>Protect <b>{target.habit.name}</b></> : null}</span>
+            <button className="btn btn-primary" disabled={!check?.ok} onClick={buyFreeze}>
+              <Icon name="snow" size={16} /> {offer.price === null ? 'None left this month' : `Buy · ${offer.price} Koban`}
+            </button>
           </div>
         </section>
       </div>
@@ -131,12 +137,20 @@ export function Shop() {
       </section>
 
       <section className="section">
-        <SectionHead title="Badges" meta={`${report.badges.filter((b) => b.earned).length} of ${report.badges.length}`} />
+        <SectionHead title="Badges" meta={`${badges.filter((b) => b.earned).length} of ${badges.length} earned`} />
         <ul className="badges">
-          {report.badges.map((b) => (
-            <li key={b.id} className={b.earned ? 'earned' : ''} title={b.earned ? `Earned ${dayLabel(b.earned)}` : 'Not yet'}>
-              <Icon name={b.earned ? 'trophy' : 'lock'} size={20} />
-              <span>{b.name}</span>
+          {badges.map((b) => (
+            <li key={b.id} className={`card badge${b.earned ? ' earned' : ''}`}>
+              <span className="subject-icon" data-color={b.color} aria-hidden="true">
+                <Icon name={b.icon} size={22} />
+                {!b.earned && <span className="badge-lock"><Icon name="lock" size={11} stroke={2.4} /></span>}
+              </span>
+              <div className="badge-main">
+                <b>{b.name}</b>
+                <span>{b.earned ? `Earned ${dayLabel(b.earned)}` : b.desc}</span>
+                {!b.earned && <span className="badge-bar" aria-label={`${b.value} of ${b.goal}`}><i style={{ width: `${(b.value / b.goal) * 100}%` }} /></span>}
+              </div>
+              {!b.earned && <span className="badge-count num">{b.value}/{b.goal}</span>}
             </li>
           ))}
         </ul>
