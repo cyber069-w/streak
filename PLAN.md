@@ -1,6 +1,6 @@
 # Streak – build plan
 
-Status: **approved 12 Nov 2026** – defaults for all questions accepted; Python habit dropped.
+Status: **approved 12 Nov 2026** – defaults for all questions accepted; Python habit dropped. **Built 12 Nov 2026: stages 1–6 done** (see git log).
 
 ---
 

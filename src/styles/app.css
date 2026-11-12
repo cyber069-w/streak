@@ -241,3 +241,21 @@ button { cursor: pointer; }
 .chart-table td, .chart-table th { padding: 4px 6px; border-top: 1px solid var(--line); text-align: left; }
 .chart-table th { color: var(--ink-3); font-weight: 600; }
 .history li > .num { white-space: nowrap; }
+
+/* ---- week ---- */
+.wk-grid { display: flex; flex-direction: column; gap: 6px; }
+.wk-row { display: grid; grid-template-columns: minmax(0, 1fr) repeat(7, 30px) 28px; gap: 4px; align-items: center; }
+.wk-head span { text-align: center; font-size: 0.72rem; color: var(--ink-3); font-weight: 600; }
+.wk-head span.today { color: var(--accent); }
+.wk-name { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600; min-width: 0; }
+.wk-name svg { flex: none; }
+.wk-name span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wk-cell.open { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.wk-cell { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink-3); }
+.wk-cell.done { background: var(--accent); color: var(--accent-ink); }
+.wk-cell.missed { background: var(--bad-tint); color: var(--ink); }
+.wk-cell.frozen { background: var(--ice-tint); color: var(--accent-ink); }
+.wk-cell.rest { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--ink) 22%, transparent) 0 2px, transparent 2px 5px); }
+.wk-cell.pending { box-shadow: inset 0 0 0 1.5px var(--accent); background: transparent; }
+.wk-cell.future, .wk-cell.none { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+@media (max-width: 420px) { .wk-row { grid-template-columns: minmax(0, 1fr) repeat(7, 26px) 24px; gap: 3px; } .wk-cell { width: 25px; height: 25px; } .wk-name svg { display: none; } }
