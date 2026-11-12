@@ -1,5 +1,7 @@
 # Streak
 
+**Live:** https://cyber069-w.github.io/streak/
+
 A private habit tracker with streaks and a reward system (Koban), next to Study Desk. Installable web app (PWA) for
 iPhone and Mac: works offline, no backend, no accounts, no tracking. Data lives in IndexedDB on each device and syncs
 encrypted through your own private GitHub repo – the same one Study Desk uses.
