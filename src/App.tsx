@@ -47,7 +47,7 @@ function Shell({ path, children }: { path: string; children: ReactNode }) {
           <span className="seal seal-logo" aria-hidden="true"><img src="icons/streak-logo.svg" alt="" /></span>
           <span>
             <div className="brand-name">Streak</div>
-            <div className="brand-sub">Daily forge</div>
+            <div className="brand-sub">Kaizen</div>
           </span>
         </a>
         <nav className="nav" aria-label="Main">
