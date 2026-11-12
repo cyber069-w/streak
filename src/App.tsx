@@ -44,10 +44,10 @@ function Shell({ path, children }: { path: string; children: ReactNode }) {
     <div className="shell">
       <aside className="sidebar">
         <a className="brand" href="#/">
-          <span className="seal seal-logo" aria-hidden="true"><img src="icons/streak-192.png" alt="" /></span>
+          <span className="seal seal-logo" aria-hidden="true"><img src="icons/streak-logo.svg" alt="" /></span>
           <span>
             <div className="brand-name">Streak</div>
-            <div className="brand-sub">Habits &amp; Koban</div>
+            <div className="brand-sub">Habit tracker</div>
           </span>
         </a>
         <nav className="nav" aria-label="Main">
