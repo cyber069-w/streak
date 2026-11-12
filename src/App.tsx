@@ -3,12 +3,14 @@ import { Icon } from './components/Icon';
 import { settleTimer } from './components/MeditationTimer';
 import { usePath } from './lib/router';
 import { Settings } from './screens/Settings';
+import { Shop } from './screens/Shop';
 import { Streaks } from './screens/Streaks';
 import { Today } from './screens/Today';
 
 const TABS = [
   { path: '/', label: 'Today', icon: 'today', screen: Today },
   { path: '/streaks', label: 'Streaks', icon: 'streaks', screen: Streaks },
+  { path: '/shop', label: 'Shop', icon: 'shop', screen: Shop },
 ];
 
 export function App() {

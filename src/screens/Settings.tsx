@@ -1,8 +1,10 @@
-/** Settings: sync (also unlocks Study Desk data), backup, look. Habits, rewards and Monkeytype come in their own sections. */
-import { useState, type ReactNode } from 'react';
+/** Settings: habits, sync (also unlocks Study Desk data), backup, look. Rewards are edited in the Shop. */
+import { useState } from 'react';
 import { importBackup, makeBackup, parseBackup } from '../core/backup';
 import { connectSync, disconnectSync, PasswordMismatchError, syncNow, useSyncStatus } from '../core/sync';
 import { Icon } from '../components/Icon';
+import { Section } from '../components/Section';
+import { HabitsSection } from './HabitEditor';
 import { navigate } from '../lib/router';
 
 const ago = (ms?: number) => {
@@ -14,14 +16,6 @@ const ago = (ms?: number) => {
   return new Date(ms).toLocaleDateString('en-GB');
 };
 
-export function Section({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
-  return (
-    <section className="glass" id={id}>
-      <div className="glass-head"><h2>{title}</h2></div>
-      <div className="stack">{children}</div>
-    </section>
-  );
-}
 
 function SyncSection() {
   const st = useSyncStatus();
@@ -160,6 +154,7 @@ export function Settings() {
         <button className="icon-btn" onClick={() => navigate('/')} aria-label="Back"><Icon name="left" /></button>
         <h1>Settings</h1>
       </header>
+      <HabitsSection />
       <SyncSection />
       <BackupSection />
       <LookSection />

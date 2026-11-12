@@ -196,3 +196,25 @@ button { cursor: pointer; }
 @keyframes fade { from { opacity: 0; } }
 @keyframes rise { from { transform: translateY(24px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* ---- shop ---- */
+.badges { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.badges li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; font-size: 0.78rem; color: var(--ink-3); background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.badges li.earned { color: var(--ink); background: var(--accent-tint); }
+.badges li.earned svg { color: var(--accent); }
+.history { list-style: none; margin: 0; padding: 0; }
+.history li { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 0.88rem; }
+.history li:first-child { border-top: 0; }
+
+/* ---- editors ---- */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { min-width: 40px; min-height: 34px; padding: 4px 10px; border-radius: 10px; border: 1px solid var(--line-2); background: transparent; font-size: 0.8rem; font-weight: 600; color: var(--ink-3); }
+.chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.check { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); }
+.sub-box { padding: 12px; border-radius: 14px; background: color-mix(in srgb, var(--paper) 35%, transparent); display: flex; flex-direction: column; gap: 10px; }
+.icon-pick { display: grid; grid-template-columns: repeat(auto-fill, 40px); gap: 6px; }
+.icon-pick button { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: transparent; color: var(--ink-2); display: grid; place-items: center; }
+.icon-pick button.on { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
+.list-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); }
+.list-row:first-child { border-top: 0; }
