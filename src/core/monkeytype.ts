@@ -1,16 +1,20 @@
 /**
  * Monkeytype results through the official API with your ApeKey (`Authorization: ApeKey …`).
- * The API allows browser calls (CORS `*`), but `GET /results` may be called only 30 times a day per account
- * with ApeKeys – shared with Study Desk's Mac job. So Streak fetches only results newer than the last one it has,
- * at most every 30 minutes on its own (plus a Refresh button), never more than 10 times a day per device, and
- * shares the results with your other devices through sync.
+ * The API allows browser calls (CORS `*`). Two calls are used:
+ * - `GET /results/last` (60 an hour): cheap, so Streak asks it every few minutes while the app is open and
+ *   adds a new test right away;
+ * - `GET /results` (only 30 a day per ApeKey, shared with Study Desk's Mac job): the full list, loaded once
+ *   after new tests showed up (so none in between is missed) or by the Refresh button – never more than
+ *   10 times a day per device.
+ * Results sync to your other devices.
  */
 import { addDays, dayOf, weekStart, type Day } from './day';
 import type { Mark, TypingResult } from './types';
 
 export const API = 'https://api.monkeytype.com';
 export const DAILY_BUDGET = 10;
-export const AUTO_EVERY_MS = 30 * 60_000;
+/** How often the cheap last-result check runs while the app is open. */
+export const LIGHT_EVERY_MS = 5 * 60_000;
 const EARLIEST = 1589428800000; // the API's lower bound for onOrAfterTimestamp
 
 export class MonkeytypeError extends Error {
@@ -26,37 +30,46 @@ const WHY: Record<number, string> = {
   470: 'This ApeKey is not valid – copy it again from monkeytype.com.',
   471: 'This ApeKey is inactive – switch it to active in Monkeytype’s account settings.',
   472: 'This doesn’t look like an ApeKey.',
-  479: 'The daily ApeKey limit (30 calls) is used up – tomorrow it works again.',
+  479: 'Monkeytype’s ApeKey limit is reached – it works again later (the full list: tomorrow).',
 };
 
 interface ApiResult { timestamp: number; wpm: number; acc: number; testDuration?: number; mode?: string; mode2?: string }
 
-/** Results on or after `since` (ms), newest API shape → Streak's compact one. */
-export async function fetchResults(apeKey: string, since: number, fetchFn: typeof fetch = (...a) => fetch(...a)): Promise<TypingResult[]> {
-  const url = `${API}/results?onOrAfterTimestamp=${Math.max(EARLIEST, Math.floor(since))}&limit=1000`;
+const toResult = (r: ApiResult): TypingResult => ({ ts: r.timestamp, wpm: Math.round(r.wpm * 10) / 10, acc: Math.round(r.acc * 10) / 10, sec: Math.round(r.testDuration ?? 0), mode: `${r.mode ?? ''} ${r.mode2 ?? ''}`.trim() });
+const valid = (r: ApiResult | null | undefined): r is ApiResult => !!r && typeof r.timestamp === 'number' && typeof r.wpm === 'number';
+
+async function call<T>(url: string, apeKey: string, fetchFn: typeof fetch, notFound?: T): Promise<T> {
   let res: Response;
   try {
     res = await fetchFn(url, { headers: { Authorization: `ApeKey ${apeKey.trim()}` }, cache: 'no-store' });
   } catch {
     throw new MonkeytypeError('Monkeytype isn’t reachable right now.', 0);
   }
+  if (res.status === 404 && notFound !== undefined) return notFound;
   if (!res.ok) throw new MonkeytypeError(WHY[res.status] ?? `Monkeytype answered with error ${res.status}.`, res.status);
-  const body = (await res.json()) as { data?: ApiResult[] };
-  return (body.data ?? [])
-    .filter((r) => typeof r.timestamp === 'number' && typeof r.wpm === 'number')
-    .map((r) => ({ ts: r.timestamp, wpm: Math.round(r.wpm * 10) / 10, acc: Math.round(r.acc * 10) / 10, sec: Math.round(r.testDuration ?? 0), mode: `${r.mode ?? ''} ${r.mode2 ?? ''}`.trim() }));
+  return ((await res.json()) as { data: T }).data;
+}
+
+/** Results on or after `since` (ms), newest API shape → Streak's compact one. Costs one of the 30 daily calls. */
+export async function fetchResults(apeKey: string, since: number, fetchFn: typeof fetch = (...a) => fetch(...a)): Promise<TypingResult[]> {
+  const url = `${API}/results?onOrAfterTimestamp=${Math.max(EARLIEST, Math.floor(since))}&limit=1000`;
+  const data = await call<ApiResult[] | null>(url, apeKey, fetchFn);
+  return (data ?? []).filter(valid).map(toResult);
+}
+
+/** The newest result only (null if there is none). Cheap: 60 calls an hour. */
+export async function fetchLast(apeKey: string, fetchFn: typeof fetch = (...a) => fetch(...a)): Promise<TypingResult | null> {
+  const data = await call<ApiResult | null>(`${API}/results/last`, apeKey, fetchFn, null);
+  return valid(data) ? toResult(data) : null;
 }
 
 /** Calls made on this device today. */
 export interface Budget { day: Day; calls: number; lastAt: number }
 
-export function mayFetch(b: Budget | undefined, now: number, tz: string, manual: boolean): { ok: boolean; left: number } {
-  const today = dayOf(now, tz);
-  const calls = b?.day === today ? b.calls : 0;
-  const left = DAILY_BUDGET - calls;
-  if (left <= 0) return { ok: false, left: 0 };
-  if (!manual && b && now - b.lastAt < AUTO_EVERY_MS) return { ok: false, left };
-  return { ok: true, left };
+export function mayFetch(b: Budget | undefined, now: number, tz: string): { ok: boolean; left: number } {
+  const calls = b?.day === dayOf(now, tz) ? b.calls : 0;
+  const left = Math.max(0, DAILY_BUDGET - calls);
+  return { ok: left > 0, left };
 }
 
 export const spend = (b: Budget | undefined, now: number, tz: string): Budget => {
@@ -66,6 +79,18 @@ export const spend = (b: Budget | undefined, now: number, tz: string): Budget =>
 
 /** Where to continue: just after the newest result we have (from any device), else 30 days back. */
 export const sinceOf = (have: TypingResult[], now: number) => (have.length ? Math.max(...have.map((r) => r.ts)) + 1 : now - 30 * 86_400_000);
+
+/**
+ * What to do after the cheap check. A result newer than everything we have is added at once, and the full
+ * list is loaded later from where we were before (`backfillFrom`), because more tests may have come in
+ * between two checks. That full load happens on the first check that finds nothing new – one call per
+ * typing session instead of one per check.
+ */
+export function afterLight(last: TypingResult | null, have: TypingResult[], now: number, backfillFrom?: number): { add: TypingResult | null; backfillFrom?: number; loadNow: boolean } {
+  const isNew = !!last && (!have.length || last.ts > Math.max(...have.map((r) => r.ts)));
+  if (isNew) return { add: last, backfillFrom: backfillFrom ?? sinceOf(have, now), loadNow: false };
+  return { add: null, backfillFrom, loadNow: backfillFrom !== undefined };
+}
 
 /** Add new results; keeps one year. */
 export function mergeResults(have: Record<string, TypingResult>, fresh: TypingResult[], now: number): Record<string, TypingResult> {

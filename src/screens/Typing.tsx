@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { dayOf } from '../core/day';
 import { typingStats } from '../core/monkeytype';
 import { factsOf, getState, useApp } from '../core/store';
-import { refreshTyping, useTypingStatus } from '../core/typingSync';
+import { checkTyping, refreshTyping, useTypingStatus } from '../core/typingSync';
 import { BarChart, ChartTable, LineChart } from '../components/Charts';
 import { Icon } from '../components/Icon';
 import { EmptyState, PageHead, SectionHead } from '../components/ui';
@@ -17,7 +17,7 @@ export function Typing() {
   const state = useApp();
   const st = useTypingStatus();
   const [entry, setEntry] = useState(false);
-  useEffect(() => void refreshTyping(), []);
+  useEffect(() => void checkTyping(), []);
   if (!state.ready) return <div className="page" />;
   const tz = state.settings.rules.tz;
   const { wpmGoal: goal, wpmStart: start } = state.settings;
@@ -28,7 +28,7 @@ export function Typing() {
 
   const status = !state.settings.apeKey
     ? 'Monkeytype is not connected yet.'
-    : `${st.error ? `${st.error} ` : st.at ? `Checked ${time(st.at)}${st.added ? ` · ${st.added} new` : ''} · ` : ''}${st.left} of 10 checks left today on this device`;
+    : `${st.error ? `${st.error} ` : st.at ? `Checked ${time(st.at)}${st.added ? ` · ${st.added} new` : ''} · ` : ''}looks for new tests every 5 min · ${st.left} refreshes left today`;
 
   return (
     <div className="page">
@@ -37,7 +37,7 @@ export function Typing() {
         title="Typing"
         sub={status}
         actions={state.settings.apeKey ? (
-          <button className="btn btn-sm" onClick={() => void refreshTyping(true)} disabled={st.busy || st.left <= 0}>
+          <button className="btn btn-sm" onClick={() => void refreshTyping()} disabled={st.busy || st.left <= 0}>
             <Icon name="refresh" size={16} /> {st.busy ? 'Loading…' : 'Refresh'}
           </button>
         ) : (

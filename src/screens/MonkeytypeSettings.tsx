@@ -14,7 +14,7 @@ export function MonkeytypeSection() {
   const saveKey = async () => {
     await saveSettings({ apeKey: key.trim() });
     setKey('');
-    await refreshTyping(true);
+    await refreshTyping();
   };
   return (
     <Section title="Monkeytype" id="monkeytype">

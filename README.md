@@ -46,8 +46,10 @@ locally and the auto-ticks start once Study Desk's data is in the repo.
 
 ### 3. Monkeytype (optional)
 monkeytype.com → Account settings → **Ape keys** → Generate → switch the key to **active** → paste it in Streak's
-Settings → Monkeytype. Monkeytype allows 30 result requests per day per account (Study Desk's Mac job uses one), so
-Streak fetches at most 10 times a day per device, only new results, and shares them through sync.
+Settings → Monkeytype. While the app is open, Streak asks Monkeytype for your last result every 5 minutes (a cheap
+call, 60 an hour), so a new test shows up right away. The full result list is limited to 30 calls a day per ApeKey
+(Study Desk's Mac job uses one), so Streak loads it only once after new tests came in, or when you tap Refresh –
+at most 10 times a day per device. Results sync to your other devices.
 
 ### 4. Install on the iPhone
 Open the Pages URL in **Safari** → Share → **Add to Home Screen**. Streak then opens full-screen like an app and
