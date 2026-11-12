@@ -6,6 +6,7 @@ import { Icon } from '../components/Icon';
 import { Section } from '../components/Section';
 import { HabitsSection } from './HabitEditor';
 import { MonkeytypeSection } from './MonkeytypeSettings';
+import { LOOKS, lookOf, readSurface, readTheme, saveLook, type Look, type Surface, type Theme } from '../lib/look';
 import { navigate } from '../lib/router';
 
 const ago = (ms?: number) => {
@@ -119,31 +120,36 @@ function BackupSection() {
   );
 }
 
-type Theme = 'system' | 'light' | 'dark';
-export function applyTheme(t: Theme = readTheme()) {
-  if (t === 'system') delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = t;
-}
-function readTheme(): Theme {
-  try {
-    return (localStorage.getItem('streak:theme') as Theme) || 'system';
-  } catch {
-    return 'system';
-  }
-}
-
 function LookSection() {
+  const [surface, setSurface] = useState<Surface>(readSurface);
   const [theme, setTheme] = useState<Theme>(readTheme);
-  const pick = (t: Theme) => {
+  const look = lookOf(surface, theme);
+  const set = (s: Surface, t: Theme) => {
+    setSurface(s);
     setTheme(t);
-    try { localStorage.setItem('streak:theme', t); } catch { /* fine */ }
-    applyTheme(t);
+    saveLook(s, t);
   };
   return (
     <Section title="Look">
-      <div className="seg">
-        {(['system', 'light', 'dark'] as const).map((t) => <button key={t} className={theme === t ? 'on' : ''} onClick={() => pick(t)}>{t[0].toUpperCase() + t.slice(1)}</button>)}
+      <p className="muted small">The same looks as Study Desk. Leather and Night: flat warm panels. Glass: frosted panels over leather. Apple: neutral panels and the system font.</p>
+      <div className="seg" role="radiogroup" aria-label="Look">
+        {(Object.keys(LOOKS) as Look[]).map((l) => (
+          <button key={l} role="radio" aria-checked={look === l} className={look === l ? 'on' : ''}
+            onClick={() => set(LOOKS[l].surface, LOOKS[l].theme ?? (surface === 'flat' ? 'system' : theme))}>
+            {LOOKS[l].label}
+          </button>
+        ))}
       </div>
+      {surface !== 'flat' && (
+        <>
+          <span className="small muted">Appearance – System follows your device</span>
+          <div className="seg" role="radiogroup" aria-label="Appearance">
+            {(['system', 'light', 'dark'] as const).map((t) => (
+              <button key={t} role="radio" aria-checked={theme === t} className={theme === t ? 'on' : ''} onClick={() => set(surface, t)}>{t[0].toUpperCase() + t.slice(1)}</button>
+            ))}
+          </div>
+        </>
+      )}
     </Section>
   );
 }

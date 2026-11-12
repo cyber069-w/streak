@@ -6,11 +6,12 @@ import { App } from './App';
 import { initStore } from './core/store';
 import { startSync } from './core/sync';
 import { startTypingSync } from './core/typingSync';
-import { applyTheme } from './screens/Settings';
+import { applyLook, watchSystemTheme } from './lib/look';
 
 // keep data on iPhone even under storage pressure (installed web apps are exempt anyway)
 void navigator.storage?.persist?.();
-applyTheme();
+applyLook();
+watchSystemTheme();
 void initStore().then(() => {
   void startSync();
   startTypingSync();
