@@ -56,7 +56,9 @@ export function mergeColl(a: Coll | undefined, b: Coll | undefined, now: number)
   const deleted: Coll['deleted'] = {};
   for (const id of ids) {
     const ia = a?.items[id], ib = b?.items[id];
-    const item = ia && ib ? (ib.at > ia.at ? ib : ia) : ia ?? ib;
+    // newest wins; on a tie (e.g. the default habits seeded on two devices) the same side wins on both devices:
+    // the smaller value, which for seeded habits is the earlier install (its createdDay sorts first)
+    const item = ia && ib ? (ib.at > ia.at || (ib.at === ia.at && stableStringify(ib.v) < stableStringify(ia.v)) ? ib : ia) : ia ?? ib;
     const del = Math.max(a?.deleted[id] ?? 0, b?.deleted[id] ?? 0);
     if (item && item.at > del) items[id] = item;
     else if (del && now - del < TOMBSTONE_MS) deleted[id] = del;

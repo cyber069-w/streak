@@ -78,6 +78,15 @@ async function write(key: keyof AppState, value: unknown) {
 let started: Promise<void> | null = null;
 export function initStore(): Promise<void> {
   started ??= (async () => {
+    // first start on this device: the default habits and rewards, saved *before* the sync collections exist,
+    // so they count as very old – a device that is already in use (sync) always wins over these defaults
+    if (!(await storage.get('seeded'))) {
+      const now = Date.now();
+      if (!(await storage.get('habits'))) await storage.set('habits', defaultHabits(now, DEFAULT_RULES));
+      if (!(await storage.get('rewards'))) await storage.set('rewards', DEFAULT_REWARDS);
+      if (!(await storage.get('settings'))) await storage.set('settings', { ...DEFAULT_SETTINGS });
+      await storage.set('seeded', true);
+    }
     await initKvSync();
     registerKvHooks(() => syncHook(), (key, value) => applyKey(key, value));
     const [habits, marks, rewards, purchases, external, typing, settings] = await Promise.all([
@@ -88,13 +97,6 @@ export function initStore(): Promise<void> {
       habits: habits ?? [], marks: marks ?? [], rewards: rewards ?? [], purchases: purchases ?? [], external: external ?? {}, typing: typing ?? {},
       settings: settingsFrom(settings),
     });
-    // first start on this device: the default habits and rewards (same ids everywhere, so devices merge cleanly)
-    if (!habits?.length && !(await storage.get('seeded'))) {
-      await storage.set('seeded', true);
-      await write('habits', defaultHabits(Date.now(), state.settings.rules));
-      if (!rewards?.length) await write('rewards', DEFAULT_REWARDS);
-      if (!settings) await write('settings', { ...DEFAULT_SETTINGS });
-    }
     set({ ready: true, now: Date.now() });
     // a new day → new report (checked every 30 s and when the app comes back)
     let day = dayOf(Date.now(), state.settings.rules.tz);
