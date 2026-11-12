@@ -218,3 +218,26 @@ button { cursor: pointer; }
 .icon-pick button.on { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); }
 .list-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); }
 .list-row:first-child { border-top: 0; }
+
+/* ---- typing ---- */
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tiles b { display: block; font-size: 1.6rem; line-height: 1.1; letter-spacing: -0.02em; }
+.tiles span { font-size: 0.75rem; color: var(--ink-3); }
+.tiles i { font-style: normal; opacity: 0.8; }
+@media (min-width: 600px) { .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.chart { position: relative; touch-action: pan-y; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart-axis { font-size: 9px; fill: var(--ink-3); font-family: var(--font); }
+.chart-tip {
+  position: absolute; top: -6px; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap; z-index: 2;
+  display: flex; flex-direction: column; padding: 6px 10px; border-radius: 10px; font-size: 0.75rem; line-height: 1.3;
+  background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow);
+}
+.chart-tip b { font-size: 0.9rem; color: var(--ink); }
+.chart-tip span { color: var(--ink-3); }
+.chart-table { margin-top: 8px; }
+.chart-table summary { cursor: pointer; }
+.chart-table table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 6px; }
+.chart-table td, .chart-table th { padding: 4px 6px; border-top: 1px solid var(--line); text-align: left; }
+.chart-table th { color: var(--ink-3); font-weight: 600; }
+.history li > .num { white-space: nowrap; }

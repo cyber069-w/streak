@@ -58,7 +58,7 @@ export function KobanCard({ report }: { report: Report }) {
   );
 }
 
-function TypingEntry({ habitId, day, onClose }: { habitId: string; day: Day; onClose: () => void }) {
+export function TypingEntry({ habitId, day, onClose }: { habitId: string; day: Day; onClose: () => void }) {
   const [wpm, setWpm] = useState('');
   const [acc, setAcc] = useState('');
   const ok = Number(wpm) > 0 && Number(acc) > 0 && Number(acc) <= 100;

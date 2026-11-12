@@ -5,6 +5,7 @@ import { connectSync, disconnectSync, PasswordMismatchError, syncNow, useSyncSta
 import { Icon } from '../components/Icon';
 import { Section } from '../components/Section';
 import { HabitsSection } from './HabitEditor';
+import { MonkeytypeSection } from './MonkeytypeSettings';
 import { navigate } from '../lib/router';
 
 const ago = (ms?: number) => {
@@ -156,6 +157,7 @@ export function Settings() {
       </header>
       <HabitsSection />
       <SyncSection />
+      <MonkeytypeSection />
       <BackupSection />
       <LookSection />
       <p className="muted small" style={{ textAlign: 'center' }}>Streak · no accounts, no tracking. Icons: Tabler Icons (MIT).</p>

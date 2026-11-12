@@ -6,10 +6,12 @@ import { Settings } from './screens/Settings';
 import { Shop } from './screens/Shop';
 import { Streaks } from './screens/Streaks';
 import { Today } from './screens/Today';
+import { Typing } from './screens/Typing';
 
 const TABS = [
   { path: '/', label: 'Today', icon: 'today', screen: Today },
   { path: '/streaks', label: 'Streaks', icon: 'streaks', screen: Streaks },
+  { path: '/typing', label: 'Typing', icon: 'typing', screen: Typing },
   { path: '/shop', label: 'Shop', icon: 'shop', screen: Shop },
 ];
 
