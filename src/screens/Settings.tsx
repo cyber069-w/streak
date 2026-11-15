@@ -1,6 +1,7 @@
 /** Settings: habits, sync (also unlocks Study Desk data), backup, look. Rewards are edited in the Shop. */
 import { useState } from 'react';
 import { importBackup, makeBackup, parseBackup } from '../core/backup';
+import { startFreshToday } from '../core/store';
 import { connectSync, disconnectSync, PasswordMismatchError, syncNow, useSyncStatus } from '../core/sync';
 import { Icon } from '../components/Icon';
 import { Section } from '../components/Section';
@@ -56,7 +57,7 @@ function SyncSection() {
         </Row>
         <Row title="Study Desk data" desc={st.studyDesk?.error ?? (st.studyDesk?.at ? `Read ${ago(st.studyDesk.at)} – read-only, CFA and Japanese tick themselves.` : 'Not read yet.')} />
         {st.error && <div className="notice bad" style={{ margin: '8px 0' }}>{st.error}</div>}
-        {msg && <p className="small muted">{msg}</p>}
+        {msg && msg !== st.error && <p className="small muted">{msg}</p>}
         <Row title="This device" desc="Disconnecting keeps your data here and on GitHub.">
           <button className="btn btn-sm btn-danger" onClick={() => void disconnectSync()}>Disconnect</button>
         </Row>
@@ -111,6 +112,9 @@ function BackupSection() {
       </Row>
       <Row title="Import" desc="Merges a backup into this device; it never deletes anything.">
         <label className="btn btn-sm"><Icon name="upload" size={16} /> Import<input type="file" accept="application/json,.json" hidden onChange={(e) => void upload(e.target.files?.[0])} /></label>
+      </Row>
+      <Row title="Start fresh today" desc="Every habit starts counting today. Earlier ticks and Koban purchases are deleted (also on your other devices). Export a backup first if unsure.">
+        <button className="btn btn-sm btn-danger" onClick={() => { if (window.confirm('Start all habits fresh from today? Earlier ticks and purchases are deleted.')) void startFreshToday().then(() => { setMsg('Done – everything starts today.'); void syncNow(); }); }}>Start fresh</button>
       </Row>
       {msg && <p className="small muted">{msg}</p>}
     </Section>

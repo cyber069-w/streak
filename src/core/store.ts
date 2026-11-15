@@ -140,3 +140,15 @@ export const addPurchase = (p: Purchase) => write('purchases', [...state.purchas
 export const saveSettings = (patch: Partial<AppSettings>) => write('settings', { ...state.settings, ...patch });
 export const saveExternal = (external: Record<Day, ExternalDay>) => write('external', external);
 export const saveTyping = (typing: Record<string, TypingResult>) => write('typing', typing);
+
+/** Begin tracking today: every habit starts today, and earlier ticks and purchases (test runs) are dropped. */
+export async function startFreshToday() {
+  const day = today();
+  await write('habits', state.habits.map((h) => {
+    const { archivedDay: _a, ...rest } = h;
+    const last = h.versions[h.versions.length - 1]!;
+    return { ...rest, createdDay: day, versions: [{ ...last, from: day, savedAt: Date.now() }] };
+  }));
+  await write('marks', []);
+  await write('purchases', []);
+}
